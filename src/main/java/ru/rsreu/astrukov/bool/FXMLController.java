@@ -1,21 +1,29 @@
 package ru.rsreu.astrukov.bool;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-import javafx.event.ActionEvent;
+import de.tesis.dynaware.grapheditor.GraphEditor;
+import de.tesis.dynaware.grapheditor.core.DefaultGraphEditor;
+import de.tesis.dynaware.grapheditor.model.GModel;
+import de.tesis.dynaware.grapheditor.model.GraphFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
+import javafx.scene.layout.AnchorPane;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class FXMLController implements Initializable {
-    
     @FXML
-    private Label label;
-    
+    private AnchorPane modelAnchorPane;
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        String javaVersion = System.getProperty("java.version");
-        String javafxVersion = System.getProperty("javafx.version");
-        label.setText("Hello, JavaFX " + javafxVersion + "\nRunning on Java " + javaVersion + ".");
-    }    
+
+
+        GraphEditor graphEditor = new DefaultGraphEditor();
+        GModel model = GraphFactory.eINSTANCE.createGModel();
+        graphEditor.setModel(model);
+        NodeManager.addNodes(model);
+
+        modelAnchorPane.getChildren().add(graphEditor.getView());
+    }
 }
