@@ -7,8 +7,8 @@ import javafx.scene.shape.StrokeType
 
 interface BoolElement {
     val drawing: BoolElementDrawing?
-
-
+    var width: Double?
+    var depth: Double?
 }
 
 fun draw(drawing: BoolElementDrawing, type: BoolElementType, node: Pane) {
@@ -47,21 +47,6 @@ fun draw(drawing: BoolElementDrawing, type: BoolElementType, node: Pane) {
 }
 
 fun BoolElementDrawing.styleRect(rectangle: Rectangle): Rectangle {
-//    val mainRect = Rectangle()
-//
-//
-//
-//    mainRect.x = this.coordinates!!.posX
-//    mainRect.y = this.coordinates.posY
-//
-//    mainRect.height = ((2 * this.scale * ELEMENT_SUBBLOCK_HEIGHT))
-//    mainRect.width = ((2 * this.scale * ELEMENT_SUBBLOCK_WIDTH))
-//
-//    mainRect.stroke = Color.BLACK
-//    mainRect.strokeWidth = this.lineThickness
-//    mainRect.strokeType = StrokeType.INSIDE
-//
-//    val strokeWidth = this.lineThickness
 
     return rectangle.apply {
         this.fill = Color.WHEAT

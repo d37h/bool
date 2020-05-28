@@ -5,14 +5,19 @@ import javafx.fxml.FXMLLoader
 import javafx.scene.Parent
 import javafx.scene.Scene
 import javafx.stage.Stage
-import ru.rsreu.astrukov.bool.model.BoolElement
-import ru.rsreu.astrukov.bool.model.BoolFunction
+import ru.rsreu.astrukov.bool.model.*
 import ru.rsreu.astrukov.bool.service.EquationSolverKt
-
-import java.util.Arrays
+import java.util.*
 
 
 class BoolApplication : Application() {
+
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            launch(BoolApplication::class.java)
+        }
+    }
 
     override fun start(stage: Stage) {
 
@@ -41,20 +46,36 @@ class BoolApplication : Application() {
                 " (!x1 && x3 && !x5) || (x1 && x3 && !x4 && !x5)" +
                 " || (x1 && x2 && !x3 && x5)"
 
-        val root = eqs.solve(
-                fn,
-                Arrays.asList("x1", "x2", "x3", "x4", "x5"))
-
+        val root = eqs.solve(simplifiedBf)
+        toMatrix(root, 0)
         val a = ""
     }
 
-    companion object {
+    fun toMatrix(root: BoolElement, depth: Int) {
+        if (root is BoolElementBlock) {
+            if (root.firstChild != null && root.firstChild.width == null) {
 
+                toMatrix(root.firstChild, depth + 1)
+            }
 
-        @JvmStatic
-        fun main(args: Array<String>) {
-            launch(BoolApplication::class.java)
+            if (root.secondChild != null && root.secondChild.width == null) {
+                toMatrix(root.secondChild, depth + 1)
+            }
+
+            root.depth = ELEMENT_BLOCK_DISTANCE_DEPTH
+            root.width = ELEMENT_BLOCK_DISTANCE + (root.secondChild?.width ?: 0.0) + (root.firstChild?.width ?: 0.0)
+
+            return
         }
+
+        root.depth = ELEMENT_BLOCK_DISTANCE_DEPTH
+        root.width = ELEMENT_SUBBLOCK_WIDTH * 2
+
     }
+
+    fun draw(root: BoolElement, unitWidth: Double) {
+
+    }
+
 
 }
