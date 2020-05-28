@@ -5,6 +5,10 @@ import de.tesis.dynaware.grapheditor.model.GConnector;
 import de.tesis.dynaware.grapheditor.model.GModel;
 import de.tesis.dynaware.grapheditor.model.GNode;
 import de.tesis.dynaware.grapheditor.model.GraphFactory;
+import org.eclipse.emf.common.util.ArrayDelegatingEList;
+import org.eclipse.emf.common.util.EList;
+
+import java.util.ArrayList;
 
 public class NodeManager {
 
@@ -40,6 +44,7 @@ public class NodeManager {
 
         Commands.addNode(model, firstNode);
         Commands.addNode(model, secondNode);
+
     }
 
 }

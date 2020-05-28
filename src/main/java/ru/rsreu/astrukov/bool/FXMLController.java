@@ -9,13 +9,21 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import ru.rsreu.astrukov.bool.model.BoolElementDrawing;
+import ru.rsreu.astrukov.bool.model.BoolElementType;
+import ru.rsreu.astrukov.bool.model.Coordinates;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import static ru.rsreu.astrukov.bool.model.BoolElementKt.draw;
+
 public class FXMLController implements Initializable {
     @FXML
     private BorderPane modelPane;
+
+    @FXML
+    private BorderPane graphicsPane;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -40,5 +48,16 @@ public class FXMLController implements Initializable {
         ));
 
         modelPane.setCenter(graphEditorContainer);
+
+        BoolElementDrawing drawing = new BoolElementDrawing(
+                new Coordinates(10.0, 10.0),
+                null,
+                null,
+                null,
+                1.0,
+                5.0
+        );
+
+        draw(drawing, BoolElementType.BIP, graphicsPane);
     }
 }

@@ -1,15 +1,12 @@
 package ru.rsreu.astrukov.bool.service
 
 import org.codehaus.janino.ExpressionEvaluator
-import ru.rsreu.astrukov.bool.model.BoolElement
-import ru.rsreu.astrukov.bool.model.BoolElementBlock
-import ru.rsreu.astrukov.bool.model.BoolElementType
-import ru.rsreu.astrukov.bool.model.BoolElementVariable
+import ru.rsreu.astrukov.bool.model.*
 import java.util.*
 
 class EquationSolverKt {
 
-    //сюда должны подаваться сама функция
+    private val variableService = VariableService()
 
 
     fun solve(function: String, variables: List<String>): BoolElement {
@@ -23,13 +20,14 @@ class EquationSolverKt {
                 val falsyFunction = function.replace(excludedVariable, "false")
 
                 BoolElementBlock(
-                    firstChild = solve(truthyFunction, vars),
-                    secondChild = solve(falsyFunction, vars),
-                    variables = vars,
-                    excludedVariable = excludedVariable,
-                    function = function,
-                    type = BoolElementType.BIP
-            )}
+                        firstChild = solve(truthyFunction, vars),
+                        secondChild = solve(falsyFunction, vars),
+                        variables = vars,
+                        excludedVariable = excludedVariable,
+                        function = function,
+                        type = BoolElementType.BIP
+                )
+            }
             variables.size == 2 -> BoolElementBlock(
                     firstChild = null,
                     secondChild = null,
@@ -38,6 +36,46 @@ class EquationSolverKt {
                     type = BoolElementType.FUNCTION
             )
             else -> BoolElementVariable(variable = variables[0])
+        }
+
+    }
+
+    fun simplify(function: BoolFunction): BoolFunction {
+        //группируем выражения по участвующим переменным
+        val varGroupsMap = function.varGroups.groupBy { it.variables.map { v -> v.replace("!", "") }.asSequence().toSet() }
+        val newMap = LinkedHashMap<Set<String>, List<BoolFunction.VariableGroup>>()
+
+        var simplified = false
+        varGroupsMap.forEach {
+
+            if (it.value.size < 2) {
+                newMap[it.key] = newMap[it.key]?.plus(it.value) ?: it.value
+                return@forEach
+            }
+
+            val excludeResult = variableService.excludeVariablesFromGroup(it.value)
+
+            if (excludeResult == null) {
+                newMap[it.key] = newMap[it.key]?.plus(it.value) ?: it.value
+                return@forEach
+            }
+
+            newMap[it.key] = newMap[it.key]?.plus(excludeResult.variables) ?: excludeResult.variables
+            val excludedVarsKey = excludeResult.simplifiedGroup.variables.map { variable ->
+                variable.replace("!", "")
+            }.toSet()
+
+            newMap[excludedVarsKey] = newMap[excludedVarsKey]?.plus(excludeResult.simplifiedGroup)
+                    ?: listOf(excludeResult.simplifiedGroup)
+
+            simplified = true
+
+        }
+
+        return if (simplified) {
+            simplify(BoolFunction(varGroups = newMap.values.flatten()))
+        } else {
+            function
         }
 
     }

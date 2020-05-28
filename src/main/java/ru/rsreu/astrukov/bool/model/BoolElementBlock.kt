@@ -10,7 +10,6 @@ data class BoolElementBlock(
         val variables: List<String>,
         val function: String,
 
-        override val posX: Int = 0,
-        override val posY: Int = 0
+        override val drawing: BoolElementDrawing? = null
 ) : BoolElement
 
