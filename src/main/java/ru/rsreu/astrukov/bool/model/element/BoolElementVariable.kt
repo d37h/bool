@@ -1,10 +1,11 @@
 package ru.rsreu.astrukov.bool.model.element
 
+import ru.rsreu.astrukov.bool.model.Coordinates
 import ru.rsreu.astrukov.bool.model.DrawParams
 
 data class BoolElementVariable(
         val variable: String,
-        override var drawParams: DrawParams? = null
+        override var coordinates: Coordinates? = null
 ) : BoolElement {
 
     companion object {

@@ -1,9 +1,12 @@
 package ru.rsreu.astrukov.bool.service
 
-import com.sun.prism.paint.Color
+import javafx.scene.layout.Background
+import javafx.scene.layout.BackgroundFill
 import javafx.scene.layout.Pane
+import javafx.scene.paint.Color
+import javafx.scene.shape.Line
 import ru.rsreu.astrukov.bool.model.BoolFunction
-import javafx.scene.shape.Rectangle
+import ru.rsreu.astrukov.bool.model.DrawParams
 
 fun getBf(pane: Pane) {
 
@@ -24,12 +27,26 @@ fun getBf(pane: Pane) {
 
 
     drawService.setCoordinates(root, 1)
-    val paneHeight = root.drawParams?.scale ?: 1.0 * (root.drawParams?.posY ?: 128.0)
-    val pixelsPerUnitWidth = root.drawParams?.scale ?: 1.0
+
+    val drawParams = DrawParams(scale = 1.0)
+
+    val paneHeight = drawParams.scale * root.coordinates?.posY!!
+
     pane.prefHeight = paneHeight
     pane.minHeight = paneHeight
+    pane.background = Background(BackgroundFill(Color.GRAY, null, null), null, null)
     //todo:  separate drawparams from coords and move styleParams to service
-    drawService.pixelsPerUnitWidth = pixelsPerUnitWidth
+    drawService.drawParams = drawParams
+
+    val netSize = 8.0
+    for (i in 1..25) {
+        val lineX = Line(0.0, i*netSize, 256.0, i*netSize)
+        lineX.stroke = if( i.rem(5) != 0 ) Color.DARKGREY else Color.BLACK
+        val lineY = Line(i*netSize, 0.0, i*netSize, 256.0)
+        lineY.stroke = if( i.rem(5) != 0 ) Color.DARKGREY else Color.BLACK
+        pane.children.addAll(lineX, lineY)
+    }
+
     drawService.draw(root, pane)
 //    val rect = Rectangle(200.0,0.0, 50.0, 50.0)
 //    val rect2 = Rectangle(200.0,200.0, 50.0, 50.0)
