@@ -9,6 +9,11 @@ interface BoolElement {
     var drawParams: DrawParams?
 }
 
+interface BoolElementWithChildren: BoolElement {
+    val firstChild: BoolElement?
+    val secondChild: BoolElement?
+    override var drawParams: DrawParams?
+}
 
 fun styleRect(rectangle: Rectangle): Rectangle {
 

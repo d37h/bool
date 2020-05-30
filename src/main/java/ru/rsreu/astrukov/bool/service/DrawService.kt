@@ -1,86 +1,69 @@
 package ru.rsreu.astrukov.bool.service
 
-import javafx.scene.layout.Background
-import javafx.scene.layout.BackgroundFill
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
-import javafx.scene.shape.Line
 import javafx.scene.shape.Rectangle
 import javafx.scene.text.Font
 import javafx.scene.text.Text
 import ru.rsreu.astrukov.bool.model.*
 import ru.rsreu.astrukov.bool.model.element.*
 
-class DrawService(
-        private val xMult: Double,
-        private val yMult: Double
-) {
+class DrawService() {
 
-    fun draw(element:BoolElement, node: Pane) {
-        node.background = Background( BackgroundFill(Color.ALICEBLUE, null, null))
+    var pixelsPerUnitWidth: Double = 1.0
+
+    fun draw(element: BoolElement, node: Pane, offsetY: Double = 0.0) {
+//        node.background = Background(BackgroundFill(Color.ALICEBLUE, null, null))
 
         if (element.drawParams != null) {
 
-            when(element) {
+            when (element) {
                 is BoolElementBlock -> {
-                    drawBIP(element.drawParams!!, node)
-                    element.firstChild?.let {
-                        draw(it, node)
-                        val line = Line(
-                                element.drawParams!!.posX, element.drawParams!!.posY,
-                                element.firstChild.drawParams!!.posX, element.firstChild.drawParams!!.posY
-                        )
-                        node.children.add(line)
-                    }
-                    element.secondChild?.let {
-                        draw(it, node)
-                        val line = Line(
-                                element.drawParams!!.posX, element.drawParams!!.posY,
-                                element.secondChild.drawParams!!.posX, element.secondChild.drawParams!!.posY
-                        )
-                        node.children.add(line)
-                    }
-
+                    drawBIP(element.drawParams!!, node, offsetY)
                 }
                 is BoolElementFunction -> {
-                    drawFunction(element, element.drawParams!!, node)
-                    element.firstChild?.let {
-                        draw(it, node)
-                        val line = Line(
-                                element.drawParams!!.posX, element.drawParams!!.posY,
-                                element.firstChild.drawParams!!.posX, element.firstChild.drawParams!!.posY
-                        )
-                        node.children.add(line)
-                    }
-                    element.secondChild?.let {
-                        draw(it, node)
-                        val line = Line(
-                                element.drawParams!!.posX, element.drawParams!!.posY,
-                                element.secondChild.drawParams!!.posX, element.secondChild.drawParams!!.posY
-                        )
-                        node.children.add(line)
-                    }
+                    drawFunction(element, element.drawParams!!, node, offsetY)
                 }
-                is BoolElementVariable ->
-                    drawVariable(element, element.drawParams!!, node)
+                is BoolElementVariable -> {
+                    drawVariable(element, element.drawParams!!, node, offsetY)
+                }
+            }
+
+            if (element is BoolElementWithChildren) {
+                element.firstChild?.let {
+                    draw(it, node, offsetY)
+//                    val line = Line(
+//                            element.drawParams!!.posX, element.drawParams!!.posY,
+//                            it.drawParams!!.posX, it.drawParams!!.posY
+//                    )
+//                    node.children.add(line)
+                }
+                element.secondChild?.let {
+                    draw(it, node, offsetY + (element.firstChild?.drawParams?.posY ?: 0.0))
+//                    val line = Line(
+//                            element.drawParams!!.posX, element.drawParams!!.posY,
+//                            it.drawParams!!.posX, it.drawParams!!.posY
+//                    )
+//                    line.fill = Color.AQUAMARINE
+//                    line.stroke = Color.AQUAMARINE
+//                    node.children.add(line)
+                }
             }
         }
     }
 
 
     fun setCoordinates(root: BoolElement, depth: Int) {
-        if (root is BoolElementBlock) {
+        if (root is BoolElementWithChildren) {
             if (root.firstChild != null) {
-
-                setCoordinates(root.firstChild, depth + 1)
+                setCoordinates(root.firstChild!!, depth + 1)
             }
-
             if (root.secondChild != null) {
-                setCoordinates(root.secondChild, depth + 1)
+                setCoordinates(root.secondChild!!, depth + 1)
             }
 
             root.drawParams = DrawParams(
-                    depth * (ELEMENT_BLOCK_DISTANCE_DEPTH + ELEMENT_SUBBLOCK_WIDTH*2),
+                    depth * (ELEMENT_BLOCK_DISTANCE_DEPTH + ELEMENT_SUBBLOCK_WIDTH * 2),
                     ELEMENT_BLOCK_DISTANCE +
                             (root.secondChild?.drawParams?.posY ?: 0.0) +
                             (root.firstChild?.drawParams?.posY ?: 0.0)
@@ -89,105 +72,93 @@ class DrawService(
             return
         }
 
-        if (root is BoolElementFunction) {
-            if (root.firstChild != null) {
-
-                setCoordinates(root.firstChild, depth + 1)
-            }
-
-            if (root.secondChild != null) {
-                setCoordinates(root.secondChild, depth + 1)
-            }
-
-            root.drawParams = DrawParams(
-                    depth * (ELEMENT_BLOCK_DISTANCE_DEPTH + ELEMENT_SUBBLOCK_WIDTH*2),
-                    ELEMENT_BLOCK_DISTANCE +
-                            (root.secondChild?.drawParams?.posY ?: 0.0) +
-                            (root.firstChild?.drawParams?.posY ?: 0.0)
-            )
-
-            return
-        }
 
         root.drawParams = DrawParams(
-                depth * (ELEMENT_BLOCK_DISTANCE_DEPTH + ELEMENT_SUBBLOCK_WIDTH*2),
+                depth * (ELEMENT_BLOCK_DISTANCE_DEPTH + ELEMENT_SUBBLOCK_WIDTH * 2),
                 ELEMENT_SUBBLOCK_WIDTH * 2
         )
+    }
+
+    private fun drawBIP(drawParams: DrawParams, node: Pane, offsetX: Double) {
+        val blockHeight = drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
+        val blockWidth = drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
+
+        val posX = (drawParams.posX) * drawParams.scale
+        val posY = drawParams.getPosY(offsetX)
+
+        val mainRect = styleRect(Rectangle())
+
+        mainRect.x = posX
+        mainRect.y = posY
+        mainRect.height = (2 * blockHeight - drawParams.lineThickness)
+        mainRect.width = (blockWidth)
+
+        val firstChildRect = Rectangle().let { styleRect(it) }
+
+        firstChildRect.x = posX + blockWidth - drawParams.lineThickness
+        firstChildRect.y = posY
+        firstChildRect.height = blockHeight
+        firstChildRect.width = blockWidth
+
+        val secondChildRect = Rectangle().let { styleRect(it) }
+
+        secondChildRect.x = posX + blockWidth - drawParams.lineThickness
+        secondChildRect.y = posY + blockHeight - drawParams.lineThickness
+        secondChildRect.height = blockHeight
+        secondChildRect.width = blockWidth
+
+        node.children.addAll(listOf(mainRect, firstChildRect, secondChildRect))
 
     }
 
-    private fun drawBIP(drawParams: DrawParams, node: Pane) {
+    private fun drawFunction(element: BoolElementFunction, drawParams: DrawParams, node: Pane, offsetX: Double) {
+        val blockHeight = drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
+        val blockWidth = drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
 
+        val posX = (drawParams.posX) * drawParams.scale
+        val posY = drawParams.getPosY(offsetX)
 
-            val blockHeight = drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
-            val blockWidth = drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
+        val mainRect = Rectangle().let { styleRect(it) }
 
-                val mainRect = styleRect(Rectangle())
+        mainRect.x = posX
+        mainRect.y = posY
+        mainRect.height = (2 * blockHeight - drawParams.lineThickness)
+        mainRect.width = (blockWidth)
+        mainRect.fill = Color.ORANGE
 
-                mainRect.x = drawParams.posX * xMult
-                mainRect.y = drawParams.posY * yMult
-                mainRect.height = (2 * blockHeight - drawParams.lineThickness)
-                mainRect.width = (blockWidth)
+        val expression = element.type.stringValue + " " + element.firstChild?.variable + " " + element.secondChild?.variable
+        val text = Text(drawParams.posX, drawParams.posY, expression)
+        text.rotate = 90.0
+        text.fill = Color.BLACK
+        text.font = Font("Verdana", drawParams.scale * ELEMENT_FONT_SIZE)
 
-                val firstChildRect = Rectangle().let { styleRect(it) }
-
-                firstChildRect.x = drawParams.posX * xMult + blockWidth - drawParams.lineThickness
-                firstChildRect.y = drawParams.posY * yMult
-                firstChildRect.height = blockHeight
-                firstChildRect.width = blockWidth
-
-                val secondChildRect = Rectangle().let { styleRect(it) }
-
-                secondChildRect.x = drawParams.posX * xMult + blockWidth - drawParams.lineThickness
-                secondChildRect.y = drawParams.posY * yMult + blockHeight - drawParams.lineThickness
-                secondChildRect.height = blockHeight
-                secondChildRect.width = blockWidth
-
-                node.children.addAll(listOf(mainRect, firstChildRect, secondChildRect))
+        node.children.addAll(listOf(mainRect, text))
 
     }
 
-    private fun drawFunction(element: BoolElementFunction, drawParams: DrawParams, node: Pane) {
+    private fun drawVariable(element: BoolElementVariable, drawParams: DrawParams, node: Pane, offsetX: Double) {
+        val blockHeight = drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
+        val blockWidth = drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
 
-            val blockHeight = drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
-            val blockWidth = drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
+        val posX = (drawParams.posX) * drawParams.scale
+        val posY = drawParams.getPosY(offsetX)
 
-            val mainRect = Rectangle().let { styleRect(it) }
+        val mainRect = Rectangle().let { styleRect(it) }
+        mainRect.fill = Color.RED
 
-            mainRect.x = drawParams.posX * xMult
-            mainRect.y = drawParams.posY * yMult
-            mainRect.height = (2 * blockHeight - drawParams.lineThickness)
-            mainRect.width = (blockWidth)
+        mainRect.x = posX
+        mainRect.y = posY
+        mainRect.height = (2 * blockHeight - drawParams.lineThickness)
+        mainRect.width = (blockWidth)
 
-            val expression = element.type.stringValue + " "+ element.firstChild?.variable + " "+ element.secondChild?.variable
-            val text = Text(drawParams.posX, drawParams.posY, expression)
-            text.rotate = 90.0
-            text.fill = Color.BLACK
-        text.font = Font("Verdana",  drawParams.scale * ELMENT_FONT_SIZE)
+        val text = Text(drawParams.posX, drawParams.posY, element.variable)
+        text.rotate = 90.0
+        text.fill = Color.BLACK
 
-            node.children.addAll(listOf(mainRect, text))
-
-    }
-
-    private fun drawVariable(element: BoolElementVariable, drawParams: DrawParams, node: Pane) {
-
-
-            val blockHeight = drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
-            val blockWidth = drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
-
-            val mainRect = Rectangle().let { styleRect(it) }
-
-            mainRect.x = drawParams.posX * xMult
-            mainRect.y = drawParams.posY * yMult
-            mainRect.height = (2 * blockHeight - drawParams.lineThickness)
-            mainRect.width = (blockWidth)
-
-            val text = Text(drawParams.posX, drawParams.posY, element.variable)
-            text.rotate = 90.0
-            text.fill = Color.BLACK
-
-            node.children.addAll(listOf(mainRect, text))
+        node.children.addAll(listOf(mainRect, text))
 
     }
+
+    private fun DrawParams.getPosY(offsetY: Double) = ((this.posY)/2 + offsetY- ELEMENT_SUBBLOCK_HEIGHT) * this.scale
 
 }
