@@ -1,17 +1,20 @@
 package ru.rsreu.astrukov.bool.service
 
 import org.codehaus.janino.ExpressionEvaluator
+import ru.rsreu.astrukov.bool.helper.VariablesHelper.inverseVariable
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.replaceVariableWithBoolean
 import ru.rsreu.astrukov.bool.model.*
+import ru.rsreu.astrukov.bool.model.element.*
+import java.lang.RuntimeException
 import java.util.*
 
-class EquationSolverKt {
+class EquationSolver {
 
     private val variableService = VariableService()
 
     fun solve(function: BoolFunction): BoolElement {
 
-        val variables = function.simpleVariables().toList()
+        val variables = function.allVariables().toList()
 
         return when {
             variables.size > 2 -> {
@@ -38,8 +41,7 @@ class EquationSolverKt {
                         secondChild = secondChild,
                         variables = vars,
                         excludedVariable = excludedVariable,
-                        function = function,
-                        type = BoolElementType.BIP
+                        function = function
                 )
             }
             variables.size == 2 -> simplifyTwoArgsFunction(function)
@@ -48,9 +50,9 @@ class EquationSolverKt {
 
     }
 
-    fun simplifyTwoArgsFunction(function: BoolFunction, excludedVariable: String? = null, value: Boolean? = null) : BoolElementFunction {
+    fun simplifyTwoArgsFunction(function: BoolFunction, excludedVariable: String? = null, value: Boolean? = null) : BoolElement {
 
-            var expression = function.toStringFunction()
+            var expression = function.toString()
 
             val expressionEvaluator = ExpressionEvaluator()
             val classParameters = arrayOf(Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
@@ -60,7 +62,7 @@ class EquationSolverKt {
                 expression = expression.replace(excludedVariable, value.toString())
             }
 
-            val variableParameters = excludedVariable?.let {function.simpleVariables().minus(it)} ?: function.simpleVariables()
+            val variableParameters = excludedVariable?.let {function.allVariables().minus(it)} ?: function.allVariables()
 
             expressionEvaluator.setParameters(variableParameters.toTypedArray() , classParameters)
             expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
@@ -78,12 +80,27 @@ class EquationSolverKt {
 
             }
 
-            return BoolElementFunction(
-                    type = resultString.reversed(),
-                    firstChild = BoolElementVariable(variable = variableParameters.toTypedArray().first()),
-                    secondChild = BoolElementVariable(variable = variableParameters.toTypedArray().last())
-            )
+            val type = BoolElementType.values().find { it.stringValue ==  resultString.reversed()}
+                    ?: throw RuntimeException("no BoolElementTypeValue for ${resultString.reversed()}")
 
+            return getElementByType(type, variableParameters.toList())
+
+    }
+
+    fun getElementByType(type: BoolElementType, variables: List<String>): BoolElement {
+        return when (type) {
+            BoolElementType.FALSE -> BoolElementVariable(BoolElementVariable.falsyValue)
+            BoolElementType.TRUE -> BoolElementVariable(BoolElementVariable.truthyValue)
+            BoolElementType.FIRST -> BoolElementVariable(variables.first())
+            BoolElementType.SECOND -> BoolElementVariable(variables.last())
+            BoolElementType.NOT_FIRST -> BoolElementVariable(inverseVariable(variables.first()))
+            BoolElementType.NOT_SECOND -> BoolElementVariable(inverseVariable(variables.last()))
+            else -> BoolElementFunction(
+                    type = type,
+                    firstChild = BoolElementVariable(variable = variables.first()),
+                    secondChild = BoolElementVariable(variable = variables.last())
+            )
+        }
     }
 
     fun simplify(function: BoolFunction): BoolFunction {
@@ -94,6 +111,7 @@ class EquationSolverKt {
         var simplified = false
         varGroupsMap.forEach {
 
+            //не пытаемся упростить функции от двух переменных
             if (it.value.size < 2) {
                 newMap[it.key] = newMap[it.key]?.plus(it.value) ?: it.value
                 return@forEach
@@ -106,6 +124,7 @@ class EquationSolverKt {
                 return@forEach
             }
 
+            //убираем старые значения, добавляем новые
             newMap[it.key] = newMap[it.key]?.plus(excludeResult.variables) ?: excludeResult.variables
             val excludedVarsKey = excludeResult.simplifiedGroup.variables.map { variable ->
                 variable.replace("!", "")
@@ -126,44 +145,17 @@ class EquationSolverKt {
 
     }
 
-    fun simplifyTwoArgsFunction(function: String, variables: List<String>): String {
+    private fun getVariableToExclude(function: BoolFunction): String {
+
+
+        val variables = function.allVariables().toList()
 
         val expressionEvaluator = ExpressionEvaluator()
         val classParameters = Array(variables.size) { Boolean::class.javaPrimitiveType }
 
         expressionEvaluator.setParameters(variables.toTypedArray(), classParameters)
         expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
-        expressionEvaluator.cook(function)
-
-        var resultString = ""
-
-        val sets = listOf(listOf(false, false), listOf(true, false), listOf(false, true), listOf(true, true))
-
-        for (set in sets) {
-
-            val result = expressionEvaluator.evaluate(set.toTypedArray()) as Boolean
-
-            resultString += if (result) "1" else "0"
-
-        }
-
-        return resultString.reversed()
-    }
-
-
-    fun getVariableToExclude(
-            function: BoolFunction
-    ): String {
-
-
-        val variables = function.simpleVariables().toList()
-
-        val expressionEvaluator = ExpressionEvaluator()
-        val classParameters = Array(variables.size) { Boolean::class.javaPrimitiveType }
-
-        expressionEvaluator.setParameters(variables.toTypedArray(), classParameters)
-        expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
-        expressionEvaluator.cook(function.toStringFunction())
+        expressionEvaluator.cook(function.toString())
 
         val weightList = ArrayList<Int>()
 

@@ -1,6 +1,5 @@
 package ru.rsreu.astrukov.bool.model
 
-import ru.rsreu.astrukov.bool.helper.VariablesHelper.inverseVariable
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.toVariableWithoutInverse
 
 data class BoolFunction(
@@ -10,7 +9,7 @@ data class BoolFunction(
             val variables: List<String>
     ) {
 
-        fun getVariablesToExclude(group: VariableGroup) : String? {
+        fun getVariablesToExclude(group: VariableGroup): String? {
 
             val vars = this.variables
             val groupVars = group.variables
@@ -34,13 +33,13 @@ data class BoolFunction(
 
     }
 
-    fun toStringFunction() = varGroups.joinToString( separator = " || ") {
-        it.variables.joinToString (separator = " && ", prefix = "(", postfix = ")")
+    override fun toString() = varGroups.joinToString(separator = " || ") {
+        it.variables.joinToString(separator = " && ", prefix = "(", postfix = ")")
     }
 
 
-    fun simpleVariables(): Set<String> = varGroups.flatMap { it.variables }
-                .map { it.replace("!", "") }
-                .toSet()
+    fun allVariables(): Set<String> = varGroups.flatMap { it.variables }
+            .map { it.replace("!", "") }
+            .toSet()
 }
 

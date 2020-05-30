@@ -11,18 +11,15 @@ const val ELEMENT_CONNECTOR_DIAMETER = 1.0
 
 const val ELMENT_FONT_SIZE = 6
 
-data class BoolElementDrawing(
-        val coordinates: Coordinates?,
-        val parentConnectorCoordinates: Coordinates? = null,
-        val firstChildConnectorCoordinates: Coordinates? = null,
-        val secondChildConnectorCoordinates: Coordinates? = null,
-
-        val lineThickness: Double = 1.0,
-        val scale: Double = 1.0
-)
-
-
 data class Coordinates(
         val posX: Double,
         val posY: Double
+)
+
+data class DrawParams(
+        var posX: Double,
+        var posY: Double,
+        var lineThickness: Double = 1.0,
+        var scale: Double = 1.0
+
 )
