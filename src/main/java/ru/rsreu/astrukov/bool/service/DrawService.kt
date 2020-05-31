@@ -14,44 +14,33 @@ class DrawService() {
 
     fun draw(element: BoolElement, node: Pane, offsetY: Double = 0.0) {
 
-        if (element.coordinates != null) {
+        if (element.coordinates == null) {
+            return
+        }
 
-            when (element) {
-                is BoolElementBlock -> {
-                    drawBIP(element.coordinates!!, node, offsetY)
-                }
-                is BoolElementFunction -> {
-                    drawFunction(element, element.coordinates!!, node, offsetY)
-                }
-                is BoolElementVariable -> {
-                    drawVariable(element, element.coordinates!!, node, offsetY)
-                }
+        when (element) {
+            is BoolElementBlock -> {
+                drawBIP(element.coordinates!!, node, offsetY)
             }
+            is BoolElementFunction -> {
+                drawFunction(element, element.coordinates!!, node, offsetY)
+            }
+            is BoolElementVariable -> {
+                drawVariable(element, element.coordinates!!, node, offsetY)
+            }
+        }
 
-            if (element is BoolElementWithChildren) {
-                element.firstChild?.let {
-                    draw(it, node, offsetY)
-//                    val line = Line(
-//                            element.drawParams!!.posX, element.drawParams!!.posY,
-//                            it.drawParams!!.posX, it.drawParams!!.posY
-//                    )
-//                    node.children.add(line)
-                }
-                element.secondChild?.let {
-                    draw(
-                            it,
-                            node,
-                            offsetY + (element.firstChild?.coordinates?.elementWidth ?: 0.0)
-                                    + DrawVariables.spacingHeight
-                    )
-//                    val line = Line(
-//                            element.drawParams!!.posX, element.drawParams!!.posY,
-//                            it.drawParams!!.posX, it.drawParams!!.posY
-//                    )
-//                    line.fill = Color.AQUAMARINE
-//                    line.stroke = Color.AQUAMARINE
-//                    node.children.add(line)
-                }
+        if (element is BoolElementWithChildren) {
+            element.firstChild?.let {
+                draw(it, node, offsetY)
+            }
+            element.secondChild?.let {
+                draw(
+                        it,
+                        node,
+                        offsetY + (element.firstChild?.coordinates?.elementWidth ?: 0.0)
+                                + DrawVariables.spacingHeight
+                )
             }
         }
     }
@@ -186,12 +175,13 @@ class DrawService() {
     }
 
     private fun Coordinates.getPosY(offsetY: Double): Double {
-//        val offset = if (offsetY == 0.0) -DrawVariables.elementSubBlockHeight*2
-//        else offsetY
+        val offset = if (offsetY == 0.0)
+            -DrawVariables.elementSubBlockHeight
+        else offsetY
 
         return ((
-                this.elementWidth) /2 + offsetY //-DrawVariables.elementSubBlockHeight*2
-                )* this@DrawService.drawParams.scale
+                this.elementWidth) / 2 + offset
+                ) * this@DrawService.drawParams.scale
     }
 
 
