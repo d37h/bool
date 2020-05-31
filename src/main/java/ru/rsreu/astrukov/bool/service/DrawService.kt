@@ -3,6 +3,7 @@ package ru.rsreu.astrukov.bool.service
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
+import javafx.scene.text.Font
 import javafx.scene.text.Text
 import ru.rsreu.astrukov.bool.model.*
 import ru.rsreu.astrukov.bool.model.element.*
@@ -37,7 +38,12 @@ class DrawService() {
 //                    node.children.add(line)
                 }
                 element.secondChild?.let {
-                    draw(it, node, offsetY + (element.firstChild?.coordinates?.posY ?: 0.0) + ELEMENT_BLOCK_DISTANCE)
+                    draw(
+                            it,
+                            node,
+                            offsetY + (element.firstChild?.coordinates?.elementWidth ?: 0.0)
+                                    + DrawVariables.spacingHeight
+                    )
 //                    val line = Line(
 //                            element.drawParams!!.posX, element.drawParams!!.posY,
 //                            it.drawParams!!.posX, it.drawParams!!.posY
@@ -61,25 +67,24 @@ class DrawService() {
             }
 
             root.coordinates = Coordinates(
-                    depth * (ELEMENT_BLOCK_DISTANCE_DEPTH + ELEMENT_SUBBLOCK_WIDTH * 2),
-                    ELEMENT_BLOCK_DISTANCE +
-                            (root.secondChild?.coordinates?.posY ?: 0.0) +
-                            (root.firstChild?.coordinates?.posY ?: 0.0)
+                    depth = depth * newBlockOffsetX,
+                    elementWidth = DrawVariables.spacingHeight +
+                            (root.secondChild?.coordinates?.elementWidth ?: 0.0) +
+                            (root.firstChild?.coordinates?.elementWidth ?: 0.0)
             )
 
             return
         }
 
-
         root.coordinates = Coordinates(
-                depth * (ELEMENT_BLOCK_DISTANCE_DEPTH + ELEMENT_SUBBLOCK_WIDTH * 2),
-                ELEMENT_SUBBLOCK_WIDTH * 2
+                depth = depth * newBlockOffsetX,
+                elementWidth = DrawVariables.elementSubBlockHeight * 2
         )
     }
 
     private fun drawBIP(coordinates: Coordinates, node: Pane, offsetX: Double) {
-//        val blockHeight = this.drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
-//        val blockWidth = this.drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
+//        val blockHeight = this.drawParams.scale * DrawVariables.elementSubBlockHeight
+//        val blockWidth = this.drawParams.scale * DrawVariables.elementSubBlockWidth
 //
 //        val posX = (coordinates.posX) * this.drawParams.scale
 //        val posY = coordinates.getPosY(offsetX)
@@ -110,8 +115,8 @@ class DrawService() {
         val mainRect = styleRect(Rectangle()).apply {
             x = coordinates.getPosX()
             y = coordinates.getPosY(offsetX)
-            height = this@DrawService.subBlockHeight * 2
-            width = this@DrawService.subBlockWidth
+            height = this@DrawService.scaledSubBlockHeight * 2
+            width = this@DrawService.scaledSubBlockWidth
             fill = Color.WHEAT
         }
 
@@ -124,8 +129,8 @@ class DrawService() {
 
         mainRect.x = coordinates.getPosX()
         mainRect.y = coordinates.getPosY(offsetY)
-        mainRect.height = this@DrawService.subBlockHeight * 2
-        mainRect.width = this@DrawService.subBlockWidth
+        mainRect.height = this@DrawService.scaledSubBlockHeight * 2
+        mainRect.width = this@DrawService.scaledSubBlockWidth
         mainRect.fill = Color.ORANGE
 
         node.children.addAll(listOf(mainRect))
@@ -141,8 +146,8 @@ class DrawService() {
     }
 
     private fun drawVariable(element: BoolElementVariable, coordinates: Coordinates, node: Pane, offsetY: Double) {
-//        val blockHeight = this.drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
-//        val blockWidth = this.drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
+//        val blockHeight = this.drawParams.scale * DrawVariables.elementSubBlockHeight
+//        val blockWidth = this.drawParams.scale * DrawVariables.elementSubBlockWidth
 //
 //        val posX = (coordinates.posX) * this.drawParams.scale
 //        val posY = coordinates.getPosY(offsetY)
@@ -161,29 +166,39 @@ class DrawService() {
 //
 //        node.children.addAll(listOf(mainRect, text))
 
-        val yCoord = coordinates.getPosY(offsetY)
         val mainRect = styleRect(Rectangle()).apply {
             x = coordinates.getPosX()
             y = coordinates.getPosY(offsetY)
-            height = this@DrawService.subBlockHeight * 2
-            width = this@DrawService.subBlockWidth
+            height = this@DrawService.scaledSubBlockHeight * 2
+            width = this@DrawService.scaledSubBlockWidth
             fill = Color.RED
         }
 
         node.children.addAll(listOf(mainRect))
     }
 
-    private fun Coordinates.getPosY(offsetY: Double): Double {
-        val offset = if (offsetY != 0.0)  {
-            offsetY
-        } else -ELEMENT_SUBBLOCK_HEIGHT*2
+    private fun styleText(text: Text): Text {
+        text.rotate = 90.0
+        text.fill = Color.BLACK
+        text.font = Font("Verdana", this.drawParams.scale * DrawVariables.fontSize)
 
-        return ((this.posY) / 2 + offset) * this@DrawService.drawParams.scale
+        return text
+    }
+
+    private fun Coordinates.getPosY(offsetY: Double): Double {
+//        val offset = if (offsetY == 0.0) -DrawVariables.elementSubBlockHeight*2
+//        else offsetY
+
+        return ((
+                this.elementWidth) /2 + offsetY //-DrawVariables.elementSubBlockHeight*2
+                )* this@DrawService.drawParams.scale
     }
 
 
-    private fun Coordinates.getPosX() = (this.posX) * this@DrawService.drawParams.scale
+    private fun Coordinates.getPosX() = (this.depth) * this@DrawService.drawParams.scale
 
-    val subBlockHeight = this.drawParams.scale * ELEMENT_SUBBLOCK_HEIGHT
-    val subBlockWidth = this.drawParams.scale * ELEMENT_SUBBLOCK_WIDTH
+    val scaledSubBlockHeight = this.drawParams.scale * DrawVariables.elementSubBlockHeight
+    val scaledSubBlockWidth = this.drawParams.scale * DrawVariables.elementSubBlockWidth
+
+    val newBlockOffsetX = (DrawVariables.spacingWidth + DrawVariables.elementSubBlockWidth * 2)
 }

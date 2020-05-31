@@ -1,19 +1,22 @@
 package ru.rsreu.astrukov.bool.model
 
-const val ELEMENT_SUBBLOCK_WIDTH = 8.0
-const val ELEMENT_SUBBLOCK_HEIGHT = 4.0
+object DrawVariables {
 
-val ELEMENT_BLOCK_DISTANCE = ELEMENT_SUBBLOCK_HEIGHT * 2
-val ELEMENT_BLOCK_DISTANCE_DEPTH = ELEMENT_SUBBLOCK_WIDTH
+    const val elementSubBlockWidth = 16.0
+    const val elementSubBlockHeight = 8.0
 
-const val ELEMENT_CONNECTOR_BORDER_OFFSET = 4.0
-const val ELEMENT_CONNECTOR_DIAMETER = 4.0
+    const val spacingHeight = 32.0
+    const val spacingWidth = 8.0
 
-const val ELEMENT_FONT_SIZE = 8
+    const val connectorDiameter = 2.0
+    const val connectorOffset = 2.0
+
+    const val fontSize = 6
+}
 
 data class Coordinates(
-        val posX: Double,
-        val posY: Double
+        val depth: Double,
+        val elementWidth: Double
 )
 
 data class DrawParams(
