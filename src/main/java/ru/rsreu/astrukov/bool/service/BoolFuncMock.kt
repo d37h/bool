@@ -30,7 +30,7 @@ fun getBf(pane: Pane) {
 
     val drawParams = DrawParams(scale = 1.0)
 
-    val paneHeight = drawParams.scale * root.coordinates?.elementWidth!!
+    val paneHeight = drawParams.scale * root.coordinates?.elementHeight!!
 
     pane.prefHeight = paneHeight
     pane.minHeight = paneHeight

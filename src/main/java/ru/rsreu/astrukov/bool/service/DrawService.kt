@@ -38,7 +38,7 @@ class DrawService() {
                 draw(
                         it,
                         node,
-                        offsetY + (element.firstChild?.coordinates?.elementWidth ?: 0.0)
+                        offsetY + (element.firstChild?.coordinates?.elementHeight ?: 0.0)
                                 + DrawVariables.spacingHeight
                 )
             }
@@ -57,9 +57,9 @@ class DrawService() {
 
             root.coordinates = Coordinates(
                     depth = depth * newBlockOffsetX,
-                    elementWidth = DrawVariables.spacingHeight +
-                            (root.secondChild?.coordinates?.elementWidth ?: 0.0) +
-                            (root.firstChild?.coordinates?.elementWidth ?: 0.0)
+                    elementHeight = DrawVariables.spacingHeight +
+                            (root.secondChild?.coordinates?.elementHeight ?: 0.0) +
+                            (root.firstChild?.coordinates?.elementHeight ?: 0.0)
             )
 
             return
@@ -67,103 +67,49 @@ class DrawService() {
 
         root.coordinates = Coordinates(
                 depth = depth * newBlockOffsetX,
-                elementWidth = DrawVariables.elementSubBlockHeight * 2
+                elementHeight = DrawVariables.elementSubBlockHeight * 2
         )
     }
 
-    private fun drawBIP(coordinates: Coordinates, node: Pane, offsetX: Double) {
-//        val blockHeight = this.drawParams.scale * DrawVariables.elementSubBlockHeight
-//        val blockWidth = this.drawParams.scale * DrawVariables.elementSubBlockWidth
-//
-//        val posX = (coordinates.posX) * this.drawParams.scale
-//        val posY = coordinates.getPosY(offsetX)
-//
-//        val mainRect = styleRect(Rectangle())
-//
-//        mainRect.x = posX
-//        mainRect.y = posY
-//        mainRect.height = (2 * blockHeight - this.drawParams.lineThickness)
-//        mainRect.width = (blockWidth)
-//
-//        val firstChildRect = Rectangle().let { styleRect(it) }
-//
-//        firstChildRect.x = posX + blockWidth - this.drawParams.lineThickness
-//        firstChildRect.y = posY
-//        firstChildRect.height = blockHeight
-//        firstChildRect.width = blockWidth
-//
-//        val secondChildRect = Rectangle().let { styleRect(it) }
-//
-//        secondChildRect.x = posX + blockWidth - this.drawParams.lineThickness
-//        secondChildRect.y = posY + blockHeight - this.drawParams.lineThickness
-//        secondChildRect.height = blockHeight
-//        secondChildRect.width = blockWidth
-//
-//        node.children.addAll(listOf(mainRect, firstChildRect, secondChildRect))
-
-        val mainRect = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX()
-            y = coordinates.getPosY(offsetX)
-            height = this@DrawService.scaledSubBlockHeight * 2
-            width = this@DrawService.scaledSubBlockWidth
-            fill = Color.WHEAT
-        }
-
-        node.children.addAll(listOf(mainRect))
+    private fun drawBIP(coordinates: Coordinates, node: Pane, offsetY: Double) {
+        drawRect(coordinates, offsetY, Color.ORANGE, node)
     }
 
     private fun drawFunction(element: BoolElementFunction, coordinates: Coordinates, node: Pane, offsetY: Double) {
-
-        val mainRect = styleRect(Rectangle())
-
-        mainRect.x = coordinates.getPosX()
-        mainRect.y = coordinates.getPosY(offsetY)
-        mainRect.height = this@DrawService.scaledSubBlockHeight * 2
-        mainRect.width = this@DrawService.scaledSubBlockWidth
-        mainRect.fill = Color.ORANGE
-
-        node.children.addAll(listOf(mainRect))
-
-//        val expression = element.type.stringValue + " " + element.firstChild?.variable + " " + element.secondChild?.variable
-//        val text = Text(coordinates.posX, coordinates.posY, expression)
-//        text.rotate = 90.0
-//        text.fill = Color.BLACK
-//        text.font = Font("Verdana", this.drawParams.scale * ELEMENT_FONT_SIZE)
-
-//        node.children.addAll(listOf(mainRect, text))
+        drawRect(coordinates, offsetY, Color.ORANGE, node)
 
     }
 
     private fun drawVariable(element: BoolElementVariable, coordinates: Coordinates, node: Pane, offsetY: Double) {
-//        val blockHeight = this.drawParams.scale * DrawVariables.elementSubBlockHeight
-//        val blockWidth = this.drawParams.scale * DrawVariables.elementSubBlockWidth
-//
-//        val posX = (coordinates.posX) * this.drawParams.scale
-//        val posY = coordinates.getPosY(offsetY)
-//
-//        val mainRect = Rectangle().let { styleRect(it) }
-//        mainRect.fill = Color.RED
-//
-//        mainRect.x = posX
-//        mainRect.y = posY
-//        mainRect.height = (2 * blockHeight - this.drawParams.lineThickness)
-//        mainRect.width = (blockWidth)
-//
-//        val text = Text(coordinates.posX, coordinates.posY, element.variable)
-//        text.rotate = 90.0
-//        text.fill = Color.BLACK
-//
-//        node.children.addAll(listOf(mainRect, text))
+        drawRect(coordinates, offsetY, Color.RED, node)
+    }
+
+    private fun drawRect(coordinates: Coordinates, offset:Double, color: Color, node:Pane) {
+        val dbgRect = styleRect(Rectangle()).apply {
+            x = coordinates.getPosX()
+            y = offset* this@DrawService.drawParams.scale
+            height = offset* this@DrawService.drawParams.scale + coordinates.elementHeight/2
+            width = this@DrawService.scaledSubBlockWidth
+            fill = Color.TRANSPARENT
+        }
+
+        val dbgRect2 = styleRect(Rectangle()).apply {
+            x = coordinates.getPosX()
+            y = offset* this@DrawService.drawParams.scale + coordinates.elementHeight/2
+            height = offset* this@DrawService.drawParams.scale + coordinates.elementHeight
+            width = this@DrawService.scaledSubBlockWidth
+            fill = Color.TRANSPARENT
+        }
 
         val mainRect = styleRect(Rectangle()).apply {
             x = coordinates.getPosX()
-            y = coordinates.getPosY(offsetY)
+            y = coordinates.getPosY(offset)
             height = this@DrawService.scaledSubBlockHeight * 2
             width = this@DrawService.scaledSubBlockWidth
-            fill = Color.RED
+            fill = color
         }
 
-        node.children.addAll(listOf(mainRect))
+        node.children.addAll(listOf(mainRect, dbgRect, dbgRect2))
     }
 
     private fun styleText(text: Text): Text {
@@ -180,7 +126,7 @@ class DrawService() {
         else offsetY
 
         return ((
-                this.elementWidth) / 2 + offset
+                this.elementHeight) / 2 + offset
                 ) * this@DrawService.drawParams.scale
     }
 

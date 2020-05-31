@@ -2,7 +2,7 @@ package ru.rsreu.astrukov.bool.model
 
 object DrawVariables {
 
-    const val elementSubBlockWidth = 8.0
+    const val elementSubBlockWidth = 16.0
     const val elementSubBlockHeight = 8.0
 
     const val spacingHeight = 16.0
@@ -16,7 +16,7 @@ object DrawVariables {
 
 data class Coordinates(
         val depth: Double,
-        val elementWidth: Double
+        val elementHeight: Double
 )
 
 data class DrawParams(
