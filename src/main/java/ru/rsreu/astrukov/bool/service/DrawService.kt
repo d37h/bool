@@ -2,6 +2,7 @@ package ru.rsreu.astrukov.bool.service
 
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
+import javafx.scene.shape.Line
 import javafx.scene.shape.Rectangle
 import javafx.scene.text.Font
 import javafx.scene.text.Text
@@ -35,14 +36,16 @@ class DrawService() {
         if (element is BoolElementWithChildren) {
             element.firstChild?.let {
                 draw(it, node, offsetY)
+                val coordOffset = offsetY - DrawVariables.connectorOffset
+                drawConnection(element.coordinates!!, element.firstChild!!.coordinates!!, coordOffset, offsetY, node)
             }
             element.secondChild?.let {
-                draw(
-                        it,
-                        node,
-                        offsetY + (element.firstChild?.coordinates?.elementHeight ?: 0.0)
-                                + DrawVariables.spacingHeight
-                )
+                val offset = offsetY + (element.firstChild?.coordinates?.elementHeight ?: 0.0
+                        ) + DrawVariables.spacingHeight
+                draw(it, node, offset)
+                val coordOffset = offsetY + DrawVariables.connectorOffset
+                drawConnection(element.coordinates!!, element.secondChild!!.coordinates!!, coordOffset, offset, node)
+
             }
         }
     }
@@ -87,23 +90,6 @@ class DrawService() {
     }
 
     private fun drawRect(coordinates: Coordinates, offset: Double, color: Color, node: Pane) {
-//        val offset = nornmalizeOffset(offsetY)
-
-        val dbgRect = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX()
-            y = offset * this@DrawService.drawParams.scale
-            height = offset * this@DrawService.drawParams.scale + coordinates.elementHeight / 2
-            width = this@DrawService.scaledSubBlockWidth
-            fill = Color.TRANSPARENT
-        }
-
-        val dbgRect2 = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX()
-            y = offset * this@DrawService.drawParams.scale + coordinates.elementHeight / 2
-            height = offset * this@DrawService.drawParams.scale + coordinates.elementHeight / 2
-            width = this@DrawService.scaledSubBlockWidth
-            fill = Color.TRANSPARENT
-        }
 
         val mainRect = styleRect(Rectangle()).apply {
             x = coordinates.getPosX()
@@ -113,7 +99,18 @@ class DrawService() {
             fill = color
         }
 
-        node.children.addAll(listOf(mainRect, dbgRect, dbgRect2))
+        node.children.addAll(mainRect)
+    }
+
+    private fun drawConnection(startCoords: Coordinates, endCoords: Coordinates, startOffsetY: Double, endOffsetY: Double, node: Pane) {
+        val line = Line(
+                startCoords.getTopConnectorPosXStart(),
+                startCoords.getTopConnectorPosYStart(startOffsetY),
+                endCoords.getTopConnectorPosXStart() - DrawVariables.elementSubBlockWidth*drawParams.scale,
+                endCoords.getTopConnectorPosYStart(endOffsetY)
+        )
+        line.stroke = Color.BLACK
+        node.children.addAll(line)
     }
 
     private fun styleText(text: Text): Text {
@@ -125,11 +122,18 @@ class DrawService() {
     }
 
     private fun Coordinates.getPosY(offsetY: Double): Double = (
-            (this.elementHeight) / 2 + offsetY - DrawVariables.elementSubBlockHeight
+            this.elementHeight / 2 + offsetY - DrawVariables.elementSubBlockHeight
             ) * this@DrawService.drawParams.scale
 
-
     private fun Coordinates.getPosX() = (this.depth) * this@DrawService.drawParams.scale
+
+    private fun Coordinates.getTopConnectorPosYStart(offsetY: Double) = (
+            this.elementHeight / 2 + offsetY
+            ) * this@DrawService.drawParams.scale
+
+    private fun Coordinates.getTopConnectorPosXStart() = (
+            this.depth + DrawVariables.elementSubBlockWidth
+            ) * this@DrawService.drawParams.scale
 
     val scaledSubBlockHeight = this.drawParams.scale * DrawVariables.elementSubBlockHeight
     val scaledSubBlockWidth = this.drawParams.scale * DrawVariables.elementSubBlockWidth

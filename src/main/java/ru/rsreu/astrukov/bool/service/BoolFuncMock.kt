@@ -38,14 +38,14 @@ fun getBf(pane: Pane) {
     //todo:  separate drawparams from coords and move styleParams to service
     drawService.drawParams = drawParams
 
-    val netSize = 8.0
-    for (i in 1..25) {
-        val lineX = Line(0.0, i*netSize, 256.0, i*netSize)
-        lineX.stroke = if( i.rem(5) != 0 ) Color.DARKGREY else Color.BLACK
-        val lineY = Line(i*netSize, 0.0, i*netSize, 256.0)
-        lineY.stroke = if( i.rem(5) != 0 ) Color.DARKGREY else Color.BLACK
-        pane.children.addAll(lineX, lineY)
-    }
+//    val netSize = 8.0
+//    for (i in 1..25) {
+//        val lineX = Line(0.0, i*netSize, 256.0, i*netSize)
+//        lineX.stroke = if( i.rem(5) != 0 ) Color.DARKGREY else Color.BLACK
+//        val lineY = Line(i*netSize, 0.0, i*netSize, 256.0)
+//        lineY.stroke = if( i.rem(5) != 0 ) Color.DARKGREY else Color.BLACK
+//        pane.children.addAll(lineX, lineY)
+//    }
 
     drawService.draw(root, pane)
 //    val rect = Rectangle(200.0,0.0, 50.0, 50.0)

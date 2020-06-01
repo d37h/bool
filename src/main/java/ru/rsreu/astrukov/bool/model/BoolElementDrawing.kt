@@ -3,7 +3,7 @@ package ru.rsreu.astrukov.bool.model
 object DrawVariables {
 
     const val elementSubBlockWidth = 16.0
-    const val elementSubBlockHeight = 8.0
+    const val elementSubBlockHeight = 16.0
 
     const val spacingHeight = 16.0
     const val spacingWidth = 8.0
