@@ -28,7 +28,7 @@ fun getBf(pane: Pane) {
 
     drawService.setCoordinates(root, 1)
 
-    val drawParams = DrawParams(scale = 1.0)
+    val drawParams = DrawParams(scale = 2.0)
 
     val paneHeight = drawParams.scale * root.coordinates?.elementHeight!!
 

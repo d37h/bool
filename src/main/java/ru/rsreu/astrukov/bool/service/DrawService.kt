@@ -5,7 +5,9 @@ import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import javafx.scene.text.Font
 import javafx.scene.text.Text
-import ru.rsreu.astrukov.bool.model.*
+import ru.rsreu.astrukov.bool.model.Coordinates
+import ru.rsreu.astrukov.bool.model.DrawParams
+import ru.rsreu.astrukov.bool.model.DrawVariables
 import ru.rsreu.astrukov.bool.model.element.*
 
 class DrawService() {
@@ -84,19 +86,21 @@ class DrawService() {
         drawRect(coordinates, offsetY, Color.RED, node)
     }
 
-    private fun drawRect(coordinates: Coordinates, offset:Double, color: Color, node:Pane) {
+    private fun drawRect(coordinates: Coordinates, offset: Double, color: Color, node: Pane) {
+//        val offset = nornmalizeOffset(offsetY)
+
         val dbgRect = styleRect(Rectangle()).apply {
             x = coordinates.getPosX()
-            y = offset* this@DrawService.drawParams.scale
-            height = offset* this@DrawService.drawParams.scale + coordinates.elementHeight/2
+            y = offset * this@DrawService.drawParams.scale
+            height = offset * this@DrawService.drawParams.scale + coordinates.elementHeight / 2
             width = this@DrawService.scaledSubBlockWidth
             fill = Color.TRANSPARENT
         }
 
         val dbgRect2 = styleRect(Rectangle()).apply {
             x = coordinates.getPosX()
-            y = offset* this@DrawService.drawParams.scale + coordinates.elementHeight/2
-            height = offset* this@DrawService.drawParams.scale + coordinates.elementHeight
+            y = offset * this@DrawService.drawParams.scale + coordinates.elementHeight / 2
+            height = offset * this@DrawService.drawParams.scale + coordinates.elementHeight / 2
             width = this@DrawService.scaledSubBlockWidth
             fill = Color.TRANSPARENT
         }
@@ -120,15 +124,9 @@ class DrawService() {
         return text
     }
 
-    private fun Coordinates.getPosY(offsetY: Double): Double {
-        val offset = if (offsetY == 0.0)
-            -DrawVariables.elementSubBlockHeight
-        else offsetY
-
-        return ((
-                this.elementHeight) / 2 + offset
-                ) * this@DrawService.drawParams.scale
-    }
+    private fun Coordinates.getPosY(offsetY: Double): Double = (
+            (this.elementHeight) / 2 + offsetY - DrawVariables.elementSubBlockHeight
+            ) * this@DrawService.drawParams.scale
 
 
     private fun Coordinates.getPosX() = (this.depth) * this@DrawService.drawParams.scale
