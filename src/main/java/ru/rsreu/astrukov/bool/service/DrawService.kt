@@ -21,6 +21,24 @@ class DrawService() {
             return
         }
 
+        if (element is BoolElementWithChildren) {
+            element.firstChild?.let {
+                val coordOffset = offsetY - DrawVariables.connectorOffset
+                drawConnection(element.coordinates!!, element.firstChild!!.coordinates!!, coordOffset, offsetY, node)
+
+                draw(it, node, offsetY)
+            }
+            element.secondChild?.let {
+                val offset = offsetY + (element.firstChild?.coordinates?.elementHeight ?: 0.0
+                        ) + DrawVariables.spacingHeight
+                val coordOffset = offsetY + DrawVariables.connectorOffset
+                drawConnection(element.coordinates!!, element.secondChild!!.coordinates!!, coordOffset, offset, node)
+
+                draw(it, node, offset)
+
+            }
+        }
+
         when (element) {
             is BoolElementBlock -> {
                 drawBIP(element.coordinates!!, node, offsetY)
@@ -30,22 +48,6 @@ class DrawService() {
             }
             is BoolElementVariable -> {
                 drawVariable(element, element.coordinates!!, node, offsetY)
-            }
-        }
-
-        if (element is BoolElementWithChildren) {
-            element.firstChild?.let {
-                draw(it, node, offsetY)
-                val coordOffset = offsetY - DrawVariables.connectorOffset
-                drawConnection(element.coordinates!!, element.firstChild!!.coordinates!!, coordOffset, offsetY, node)
-            }
-            element.secondChild?.let {
-                val offset = offsetY + (element.firstChild?.coordinates?.elementHeight ?: 0.0
-                        ) + DrawVariables.spacingHeight
-                draw(it, node, offset)
-                val coordOffset = offsetY + DrawVariables.connectorOffset
-                drawConnection(element.coordinates!!, element.secondChild!!.coordinates!!, coordOffset, offset, node)
-
             }
         }
     }
@@ -78,6 +80,21 @@ class DrawService() {
 
     private fun drawBIP(coordinates: Coordinates, node: Pane, offsetY: Double) {
         drawRect(coordinates, offsetY, Color.ORANGE, node)
+        val r1 = styleRect(Rectangle()).apply {
+            x = coordinates.getPosX()+this@DrawService.scaledSubBlockWidth
+            y = coordinates.getPosY(offsetY)
+            height = this@DrawService.scaledSubBlockHeight
+            width = this@DrawService.scaledSubBlockWidth
+        }
+
+        val r2 = styleRect(Rectangle()).apply {
+            x = coordinates.getPosX()+this@DrawService.scaledSubBlockWidth
+            y = coordinates.getPosY(offsetY+DrawVariables.elementSubBlockWidth)
+            height = this@DrawService.scaledSubBlockHeight
+            width = this@DrawService.scaledSubBlockWidth
+        }
+
+        node.children.addAll(r1, r2)
     }
 
     private fun drawFunction(element: BoolElementFunction, coordinates: Coordinates, node: Pane, offsetY: Double) {
@@ -109,8 +126,37 @@ class DrawService() {
                 endCoords.getTopConnectorPosXStart() - DrawVariables.elementSubBlockWidth*drawParams.scale,
                 endCoords.getTopConnectorPosYStart(endOffsetY)
         )
-        line.stroke = Color.BLACK
-        node.children.addAll(line)
+
+        val line1 = Line(
+                startCoords.getTopConnectorPosXStart(),
+                startCoords.getTopConnectorPosYStart(startOffsetY),
+                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth/2),
+                startCoords.getTopConnectorPosYStart(startOffsetY)
+        )
+
+        val line2 = Line(
+                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth/2),
+                startCoords.getTopConnectorPosYStart(startOffsetY),
+                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth/2),
+                endCoords.getTopConnectorPosYStart(endOffsetY)
+        )
+
+        val line3 = Line(
+                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth/2),
+                endCoords.getTopConnectorPosYStart(endOffsetY),
+                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth),
+                endCoords.getTopConnectorPosYStart(endOffsetY)
+        )
+
+        line1.stroke = Color.BLACK
+        line2.stroke = Color.BLACK
+        line3.stroke = Color.BLACK
+        node.children.addAll(line1, line2, line3)
     }
 
     private fun styleText(text: Text): Text {

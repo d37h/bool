@@ -8,8 +8,8 @@ object DrawVariables {
     const val spacingHeight = 16.0
     const val spacingWidth = 8.0
 
-    const val connectorDiameter = 2.0
-    const val connectorOffset = 2.0
+    const val connectorDiameter = 4.0
+    const val connectorOffset = 6.0
 
     const val fontSize = 6
 }
