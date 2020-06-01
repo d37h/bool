@@ -21,7 +21,6 @@ fun styleRect(rectangle: Rectangle): Rectangle {
     return rectangle.apply {
         this.fill = Color.WHEAT
         this.stroke = Color.BLACK
-        this.strokeWidth = strokeWidth
         this.strokeType = StrokeType.INSIDE
     }
 

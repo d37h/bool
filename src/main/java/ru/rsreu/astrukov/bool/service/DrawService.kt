@@ -16,6 +16,7 @@ class DrawService() {
     var drawParams = DrawParams(scale = 2.0)
 
     fun draw(element: BoolElement, node: Pane, offsetY: Double = 0.0) {
+        //todo:  add line for top elem
 
         if (element.coordinates == null) {
             return
@@ -79,76 +80,85 @@ class DrawService() {
     }
 
     private fun drawBIP(coordinates: Coordinates, node: Pane, offsetY: Double) {
-        drawRect(coordinates, offsetY, Color.ORANGE, node)
-        val r1 = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX()+this@DrawService.scaledSubBlockWidth
+        //todo: add AND and vars via text
+        val mainRect = styleRect(Rectangle()).apply {
+            x = coordinates.getPosX()
             y = coordinates.getPosY(offsetY)
-            height = this@DrawService.scaledSubBlockHeight
+            height = this@DrawService.scaledSubBlockHeight * 2
+            width = this@DrawService.scaledSubBlockWidth + this@DrawService.drawParams.lineThickness
+        }
+
+        val r1 = styleRect(Rectangle()).apply {
+            x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
+            y = coordinates.getPosY(offsetY)
+            height = this@DrawService.scaledSubBlockHeight + this@DrawService.drawParams.lineThickness
             width = this@DrawService.scaledSubBlockWidth
         }
 
         val r2 = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX()+this@DrawService.scaledSubBlockWidth
-            y = coordinates.getPosY(offsetY+DrawVariables.elementSubBlockWidth)
+            x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
+            y = coordinates.getPosY(offsetY + DrawVariables.elementSubBlockWidth)
             height = this@DrawService.scaledSubBlockHeight
             width = this@DrawService.scaledSubBlockWidth
         }
 
-        node.children.addAll(r1, r2)
+        node.children.addAll(mainRect, r1, r2)
     }
 
     private fun drawFunction(element: BoolElementFunction, coordinates: Coordinates, node: Pane, offsetY: Double) {
-        drawRect(coordinates, offsetY, Color.ORANGE, node)
+        //todo: implement separate drawings for each type
+        val mainRect = styleRect(Rectangle()).apply {
+            x = coordinates.getPosX()
+            y = coordinates.getPosY(offsetY)
+            height = this@DrawService.scaledSubBlockHeight * 2
+            width = this@DrawService.scaledSubBlockWidth
+        }
 
+        val text = Text(
+                coordinates.getPosX() + DrawVariables.fontSize * drawParams.scale / 2,
+                coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth,
+                element.type.stringValue
+        )
+        styleText(text)
+
+        node.children.addAll(mainRect, text)
     }
 
     private fun drawVariable(element: BoolElementVariable, coordinates: Coordinates, node: Pane, offsetY: Double) {
-        drawRect(coordinates, offsetY, Color.RED, node)
-    }
 
-    private fun drawRect(coordinates: Coordinates, offset: Double, color: Color, node: Pane) {
+        val text = Text(
+                coordinates.getPosX() + DrawVariables.fontSize * drawParams.scale / 2,
+                coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth,
+                element.variable
+        )
+        styleText(text)
 
-        val mainRect = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX()
-            y = coordinates.getPosY(offset)
-            height = this@DrawService.scaledSubBlockHeight * 2
-            width = this@DrawService.scaledSubBlockWidth
-            fill = color
-        }
-
-        node.children.addAll(mainRect)
+        node.children.addAll(text)
     }
 
     private fun drawConnection(startCoords: Coordinates, endCoords: Coordinates, startOffsetY: Double, endOffsetY: Double, node: Pane) {
-        val line = Line(
-                startCoords.getTopConnectorPosXStart(),
-                startCoords.getTopConnectorPosYStart(startOffsetY),
-                endCoords.getTopConnectorPosXStart() - DrawVariables.elementSubBlockWidth*drawParams.scale,
-                endCoords.getTopConnectorPosYStart(endOffsetY)
-        )
-
         val line1 = Line(
                 startCoords.getTopConnectorPosXStart(),
                 startCoords.getTopConnectorPosYStart(startOffsetY),
-                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
-                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth/2),
+                startCoords.getTopConnectorPosXStart() + drawParams.scale * (
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth / 2),
                 startCoords.getTopConnectorPosYStart(startOffsetY)
         )
 
         val line2 = Line(
-                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
-                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth/2),
+                startCoords.getTopConnectorPosXStart() + drawParams.scale * (
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth / 2),
                 startCoords.getTopConnectorPosYStart(startOffsetY),
-                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
-                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth/2),
+                startCoords.getTopConnectorPosXStart() + drawParams.scale * (
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth / 2),
                 endCoords.getTopConnectorPosYStart(endOffsetY)
         )
 
         val line3 = Line(
-                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
-                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth/2),
+                startCoords.getTopConnectorPosXStart() + drawParams.scale * (
+                        DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth / 2),
                 endCoords.getTopConnectorPosYStart(endOffsetY),
-                startCoords.getTopConnectorPosXStart() + drawParams.scale*(
+                startCoords.getTopConnectorPosXStart() + drawParams.scale * (
                         DrawVariables.elementSubBlockWidth + DrawVariables.spacingWidth),
                 endCoords.getTopConnectorPosYStart(endOffsetY)
         )
@@ -156,13 +166,20 @@ class DrawService() {
         line1.stroke = Color.BLACK
         line2.stroke = Color.BLACK
         line3.stroke = Color.BLACK
+
+        line1.strokeWidth = drawParams.lineThickness
+        line2.strokeWidth = drawParams.lineThickness
+        line3.strokeWidth = drawParams.lineThickness
+
         node.children.addAll(line1, line2, line3)
     }
 
     private fun styleText(text: Text): Text {
-        text.rotate = 90.0
+        //todo: добавить выравнивание (по ширине надписи?)
+        text.rotate = -90.0
         text.fill = Color.BLACK
         text.font = Font("Verdana", this.drawParams.scale * DrawVariables.fontSize)
+//        text.textAlignment = TextAlignment.JUSTIFY
 
         return text
     }
