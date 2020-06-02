@@ -9,6 +9,7 @@ import ru.rsreu.astrukov.bool.model.*
 import ru.rsreu.astrukov.bool.model.element.BoolElement
 import ru.rsreu.astrukov.bool.model.element.BoolElementBlock
 import ru.rsreu.astrukov.bool.service.EquationSolver
+import ru.rsreu.astrukov.bool.service.OpenClService
 
 
 class BoolApplication : Application() {
@@ -29,6 +30,8 @@ class BoolApplication : Application() {
         stage.scene = scene
         stage.show()
 
+        val ec =  OpenClService()
+        ec.run()
     }
 
 }
