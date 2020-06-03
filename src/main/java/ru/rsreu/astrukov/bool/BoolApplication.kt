@@ -30,8 +30,8 @@ class BoolApplication : Application() {
         stage.scene = scene
         stage.show()
 
-        val ec =  OpenClService()
-        ec.run()
+//        val ec =  OpenClService()
+//        ec.run()
     }
 
 }

@@ -7,6 +7,7 @@ import javafx.scene.paint.Color
 import javafx.scene.shape.Line
 import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.DrawParams
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrix
 
 fun getBf(pane: Pane) {
 
@@ -21,6 +22,8 @@ fun getBf(pane: Pane) {
                     BoolFunction.VariableGroup(listOf("x1", "!x3", "x2", "x5"))
             )
     )
+
+    val matr = bf.toMatrix()
 
     val simplifiedBf = eqs.simplify(bf)
     val root = eqs.solve(simplifiedBf)

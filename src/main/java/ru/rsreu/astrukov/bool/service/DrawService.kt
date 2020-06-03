@@ -42,7 +42,7 @@ class DrawService() {
 
         when (element) {
             is BoolElementBlock -> {
-                drawBIP(element.coordinates!!, node, offsetY)
+                drawBIP(element, element.coordinates!!, node, offsetY)
             }
             is BoolElementFunction -> {
                 drawFunction(element, element.coordinates!!, node, offsetY)
@@ -79,7 +79,7 @@ class DrawService() {
         )
     }
 
-    private fun drawBIP(coordinates: Coordinates, node: Pane, offsetY: Double) {
+    private fun drawBIP(element: BoolElementBlock, coordinates: Coordinates, node: Pane, offsetY: Double) {
         //todo: add AND and vars via text
         val mainRect = styleRect(Rectangle()).apply {
             x = coordinates.getPosX()
@@ -87,6 +87,15 @@ class DrawService() {
             height = this@DrawService.scaledSubBlockHeight * 2
             width = this@DrawService.scaledSubBlockWidth + this@DrawService.drawParams.lineThickness
         }
+
+        //todo:  add line for excl var
+        val text = Text(
+                coordinates.getPosX() + DrawVariables.fontSize * drawParams.scale / 2,
+                coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth,
+                element.excludedVariable
+        )
+        styleText(text)
+
 
         val r1 = styleRect(Rectangle()).apply {
             x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
@@ -102,7 +111,7 @@ class DrawService() {
             width = this@DrawService.scaledSubBlockWidth
         }
 
-        node.children.addAll(mainRect, r1, r2)
+        node.children.addAll(mainRect, r1, r2, text)
     }
 
     private fun drawFunction(element: BoolElementFunction, coordinates: Coordinates, node: Pane, offsetY: Double) {

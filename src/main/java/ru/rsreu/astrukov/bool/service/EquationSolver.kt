@@ -1,16 +1,21 @@
 package ru.rsreu.astrukov.bool.service
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.codehaus.janino.ExpressionEvaluator
+import ru.rsreu.astrukov.bool.helper.VariablesHelper
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.inverseVariable
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.replaceVariableWithBoolean
-import ru.rsreu.astrukov.bool.model.*
+import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.element.*
-import java.lang.RuntimeException
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrix
 import java.util.*
 
 class EquationSolver {
 
     private val variableService = VariableService()
+    private val openClService = OpenClService()
 
     fun solve(function: BoolFunction): BoolElement {
 
@@ -18,7 +23,8 @@ class EquationSolver {
 
         return when {
             variables.size > 2 -> {
-                val excludedVariable = getVariableToExclude(function)
+                //fixme
+                val excludedVariable = getVariableToExcludeCL(function)
                 val vars = variables.minus(excludedVariable)
 
                 val truthyFunction = replaceVariableWithBoolean(function, excludedVariable, true)
@@ -50,40 +56,40 @@ class EquationSolver {
 
     }
 
-    fun simplifyTwoArgsFunction(function: BoolFunction, excludedVariable: String? = null, value: Boolean? = null) : BoolElement {
+    fun simplifyTwoArgsFunction(function: BoolFunction, excludedVariable: String? = null, value: Boolean? = null): BoolElement {
 
-            var expression = function.toString()
+        var expression = function.toString()
 
-            val expressionEvaluator = ExpressionEvaluator()
-            val classParameters = arrayOf(Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
+        val expressionEvaluator = ExpressionEvaluator()
+        val classParameters = arrayOf(Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
 
-            if (excludedVariable != null && value != null) {
-                expression = expression.replace("!$excludedVariable", (!value).toString())
-                expression = expression.replace(excludedVariable, value.toString())
-            }
+        if (excludedVariable != null && value != null) {
+            expression = expression.replace("!$excludedVariable", (!value).toString())
+            expression = expression.replace(excludedVariable, value.toString())
+        }
 
-            val variableParameters = excludedVariable?.let {function.allVariables().minus(it)} ?: function.allVariables()
+        val variableParameters = excludedVariable?.let { function.allVariables().minus(it) } ?: function.allVariables()
 
-            expressionEvaluator.setParameters(variableParameters.toTypedArray() , classParameters)
-            expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
-            expressionEvaluator.cook(expression)
+        expressionEvaluator.setParameters(variableParameters.toTypedArray(), classParameters)
+        expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
+        expressionEvaluator.cook(expression)
 
-            var resultString = ""
+        var resultString = ""
 
-            val sets = listOf(listOf(false, false), listOf(true, false), listOf(false, true), listOf(true, true))
+        val sets = listOf(listOf(false, false), listOf(true, false), listOf(false, true), listOf(true, true))
 
-            for (set in sets) {
+        for (set in sets) {
 
-                val result = expressionEvaluator.evaluate(set.toTypedArray()) as Boolean
+            val result = expressionEvaluator.evaluate(set.toTypedArray()) as Boolean
 
-                resultString += if (result) "1" else "0"
+            resultString += if (result) "1" else "0"
 
-            }
+        }
 
-            val type = BoolElementType.values().find { it.stringValue ==  resultString.reversed()}
-                    ?: throw RuntimeException("no BoolElementTypeValue for ${resultString.reversed()}")
+        val type = BoolElementType.values().find { it.stringValue == resultString.reversed() }
+                ?: throw RuntimeException("no BoolElementTypeValue for ${resultString.reversed()}")
 
-            return getElementByType(type, variableParameters.toList())
+        return getElementByType(type, variableParameters.toList())
 
     }
 
@@ -146,8 +152,6 @@ class EquationSolver {
     }
 
     private fun getVariableToExclude(function: BoolFunction): String {
-
-
         val variables = function.allVariables().toList()
 
         val expressionEvaluator = ExpressionEvaluator()
@@ -192,6 +196,89 @@ class EquationSolver {
         return variables[variableToExcludeIndex]
     }
 
+
+    private fun getVariableToExcludeCL(function: BoolFunction): String {
+        val variablesNullable = function.toMatrix()
+
+        val variables = variablesNullable.map { it.map { variable -> variable ?: false }.toTypedArray() }.toTypedArray()
+        val weightList = ArrayList<Int>()
+
+        for (variableIndex in variables.indices) {
+
+            val falsySets = toBinarySets(function.allVariables().size, variableIndex, false).map {
+                it.toTypedArray()
+            }.toTypedArray()
+
+            val truthySets = toBinarySets(function.allVariables().size, variableIndex, true).map {
+                it.toTypedArray()
+            }.toTypedArray()
+
+            val contain = variablesNullable.map { it.map { variable -> variable != null }.toTypedArray() }.toTypedArray()
+
+            val w = openClService.calcWeightJava(
+                    variables, contain, truthySets = truthySets, falsySets = falsySets
+            )
+
+            weightList.add(w)
+
+        }
+
+        weightList.reverse()
+
+        val maxWeight = Collections.max(weightList)
+        val variableToExcludeIndex = weightList.indexOf(maxWeight)
+
+        println(variableToExcludeIndex)
+
+        //fixme: actually returns 2x weight - duplicate iterations
+        return function.allVariables().toTypedArray()[variableToExcludeIndex]
+    }
+
+
+    private fun getVariableToExcludeCoroutine(function: BoolFunction): String {
+        val variables = function.allVariables().toList()
+
+
+        val weightList = ArrayList<Int>()
+
+        for (variableIndex in variables.indices) {
+
+            val falsySets = ArrayList(toBinarySets(variables.size, variableIndex, false))
+            val truthySets = ArrayList(toBinarySets(variables.size, variableIndex, true))
+
+            val deferredWeights = (0..falsySets.size).map {
+                GlobalScope.async {
+                    val expressionEvaluator = ExpressionEvaluator()
+                    val classParameters = Array(variables.size) { Boolean::class.javaPrimitiveType }
+
+                    expressionEvaluator.setParameters(variables.toTypedArray(), classParameters)
+                    expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
+                    expressionEvaluator.cook(function.toString())
+
+                    val truthySet = truthySets[it].toTypedArray()
+                    val falsySet = falsySets[it].toTypedArray()
+
+                    val truthyResult = expressionEvaluator.evaluate(truthySet) as Boolean
+                    val falsyResult = expressionEvaluator.evaluate(falsySet) as Boolean
+
+                    if (falsyResult xor truthyResult) 1 else 0
+                }
+            }
+
+            weightList.add(runBlocking {
+                deferredWeights.map { it.await() }.sum()
+            })
+
+        }
+
+        val maxWeight = Collections.max(weightList)
+        val variableToExcludeIndex = weightList.indexOf(maxWeight)
+
+        println(variableToExcludeIndex)
+
+        //fixme: actually returns 2x weight - duplicate iterations
+        return variables[variableToExcludeIndex]
+    }
 
     private fun toBinarySets(binaryLength: Int, fixedNumIndex: Int, fixedNumValue: Boolean): List<List<Boolean>> {
 

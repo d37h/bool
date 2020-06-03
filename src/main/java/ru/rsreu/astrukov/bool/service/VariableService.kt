@@ -22,11 +22,8 @@ class VariableService {
                         val excludedVarGroup = excludeVariablesFromGroup(firstGroup, listOf(varToExclude))
 
                         return ExcludeFromGroupResult(newVariables, excludedVarGroup)
-
                     }
                 }
-
-
             }}
 
         return null

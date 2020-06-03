@@ -40,6 +40,6 @@ data class BoolFunction(
 
     fun allVariables(): Set<String> = varGroups.flatMap { it.variables }
             .map { it.replace("!", "") }
-            .toSet()
+            .distinct().sorted().toSet()
 }
 
