@@ -4,10 +4,9 @@ import javafx.scene.layout.Background
 import javafx.scene.layout.BackgroundFill
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
-import javafx.scene.shape.Line
 import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.DrawParams
-import ru.rsreu.astrukov.bool.model.element.ext.toMatrix
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrix2
 
 fun getBf(pane: Pane) {
 
@@ -23,11 +22,10 @@ fun getBf(pane: Pane) {
             )
     )
 
-    val matr = bf.toMatrix()
+    val matr = bf.toMatrix2()
 
     val simplifiedBf = eqs.simplify(bf)
-    val root = eqs.solve(simplifiedBf)
-
+    val root = eqs.solve(simplifiedBf, SolveMode.OPENCL)
 
     drawService.setCoordinates(root, 1)
 

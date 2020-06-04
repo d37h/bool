@@ -107,10 +107,10 @@ class OpenClService {
 
     }
 
-    fun calcWeightJava(boolVars: Array<Array<Boolean>>, containMask:  Array<Array<Boolean>>, truthySets: Array<Array<Boolean>>, falsySets: Array<Array<Boolean>>) : Int {
-        val res = openClServiceJava.calcWeight(
-                boolVars.map { it.toBooleanArray() }.toTypedArray(),
-                containMask.map { it.toBooleanArray() }.toTypedArray(),
+    fun calcWeightJava(boolVars: Array<BooleanArray>, containMask:  Array<BooleanArray>, truthySets: Array<Array<Boolean>>, falsySets: Array<Array<Boolean>>) : Int {
+        val res = openClServiceJava.calcWeightDbg(
+                boolVars,
+                containMask,
                 truthySets.map { it.toBooleanArray() }.toTypedArray(),
                 falsySets.map { it.toBooleanArray() }.toTypedArray()
         )
@@ -127,7 +127,6 @@ class OpenClService {
         return weight
 
     }
-
 
     data class boolVariable(
             val value: Boolean,

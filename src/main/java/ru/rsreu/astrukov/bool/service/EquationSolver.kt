@@ -4,27 +4,34 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.codehaus.janino.ExpressionEvaluator
-import ru.rsreu.astrukov.bool.helper.VariablesHelper
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.inverseVariable
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.replaceVariableWithBoolean
 import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.element.*
-import ru.rsreu.astrukov.bool.model.element.ext.toMatrix
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrix2
 import java.util.*
+
+enum class SolveMode {
+    STANDART, OPENCL
+}
 
 class EquationSolver {
 
     private val variableService = VariableService()
     private val openClService = OpenClService()
+    private val openClServiceJava = OpenClServiceJava()
 
-    fun solve(function: BoolFunction): BoolElement {
+    fun solve(function: BoolFunction, mode:SolveMode): BoolElement {
 
         val variables = function.allVariables().toList()
 
         return when {
             variables.size > 2 -> {
-                //fixme
-                val excludedVariable = getVariableToExcludeCL(function)
+
+                val excludedVariable: String = when (mode) {
+                    SolveMode.STANDART -> getVariableToExclude(function)
+                    SolveMode.OPENCL -> getVariableToExcludeCL(function)
+                }
                 val vars = variables.minus(excludedVariable)
 
                 val truthyFunction = replaceVariableWithBoolean(function, excludedVariable, true)
@@ -33,13 +40,13 @@ class EquationSolver {
                 val firstChild = if (truthyFunction.varGroups.isEmpty()) {
                     simplifyTwoArgsFunction(function, excludedVariable, true)
                 } else {
-                    solve(truthyFunction)
+                    solve(truthyFunction, mode)
                 }
 
                 val secondChild = if (falsyFunction.varGroups.isEmpty()) {
                     simplifyTwoArgsFunction(function, excludedVariable, true)
                 } else {
-                    solve(falsyFunction)
+                    solve(falsyFunction, mode)
                 }
 
                 BoolElementBlock(
@@ -198,13 +205,12 @@ class EquationSolver {
 
 
     private fun getVariableToExcludeCL(function: BoolFunction): String {
-        val variablesNullable = function.toMatrix()
+        val variablesNullable = function.toMatrix2()
 
-        val variables = variablesNullable.map { it.map { variable -> variable ?: false }.toTypedArray() }.toTypedArray()
+        val variables = variablesNullable.map { it.map { variable -> variable ?: false }.toBooleanArray() }.toTypedArray()
         val weightList = ArrayList<Int>()
 
-        for (variableIndex in variables.indices) {
-
+        function.allVariables().forEachIndexed { variableIndex, _ ->
             val falsySets = toBinarySets(function.allVariables().size, variableIndex, false).map {
                 it.toTypedArray()
             }.toTypedArray()
@@ -213,17 +219,21 @@ class EquationSolver {
                 it.toTypedArray()
             }.toTypedArray()
 
-            val contain = variablesNullable.map { it.map { variable -> variable != null }.toTypedArray() }.toTypedArray()
+            val contain = variablesNullable.map { it.map { variable -> variable != null }.toBooleanArray() }.toTypedArray()
+
+            val res = openClServiceJava.calcWeightDbg(
+                    variables,
+                    contain,
+                    truthySets.map { it.toBooleanArray() }.toTypedArray(),
+                    falsySets.map { it.toBooleanArray() }.toTypedArray()
+            )
 
             val w = openClService.calcWeightJava(
                     variables, contain, truthySets = truthySets, falsySets = falsySets
             )
 
             weightList.add(w)
-
         }
-
-        weightList.reverse()
 
         val maxWeight = Collections.max(weightList)
         val variableToExcludeIndex = weightList.indexOf(maxWeight)
