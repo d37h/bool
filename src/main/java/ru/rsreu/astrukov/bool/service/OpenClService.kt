@@ -59,11 +59,9 @@ class OpenClService {
             val falsyResult = Array<Array<Boolean>>(setsCount) { Array(groupsCount) {false} }
 
             override fun run() {
-                val gId = globalId
                 val group = boolVars[groupIndex]
                 cycle(group, truthySets[setIndex],truthyResult)
                 cycle(group, falsySets[setIndex], falsyResult)
-                val a = 1
             }
 
             fun cycle(group: Array<Boolean?>, set: Array<Boolean>, result:Array<Array<Boolean>>) {
@@ -108,15 +106,16 @@ class OpenClService {
     }
 
     fun calcWeightJava(boolVars: Array<BooleanArray>, containMask:  Array<BooleanArray>, truthySets: Array<Array<Boolean>>, falsySets: Array<Array<Boolean>>) : Int {
-        val res = openClServiceJava.calcWeightDbg(
+        val res = openClServiceJava.calcWeight(
                 boolVars,
                 containMask,
-                truthySets.map { it.toBooleanArray() }.toTypedArray(),
-                falsySets.map { it.toBooleanArray() }.toTypedArray()
+                truthySets.plus(falsySets).map { it.toBooleanArray() }.toTypedArray()
         )
 
-        val t = res.key.map { it.contains(true) }
-        val f = res.value.map { it.contains(true) }
+        val resChunked = res.toList().chunked(res.size/2)
+
+        val t = resChunked[0].map { it.contains(true) }
+        val f = resChunked[1].map { it.contains(true) }
 
         val resultBySets = t.zip(f)
 
@@ -127,9 +126,4 @@ class OpenClService {
         return weight
 
     }
-
-    data class boolVariable(
-            val value: Boolean,
-            val isPresent: Boolean
-    )
 }

@@ -118,7 +118,9 @@ class EquationSolver {
 
     fun simplify(function: BoolFunction): BoolFunction {
         //группируем выражения по участвующим переменным
-        val varGroupsMap = function.varGroups.groupBy { it.variables.map { v -> v.replace("!", "") }.asSequence().toSet() }
+        val varGroupsMap = function.varGroups.groupBy {
+            it.variables.map { v -> v.replace("!", "") }.asSequence().toSet()
+        }
         val newMap = LinkedHashMap<Set<String>, List<BoolFunction.VariableGroup>>()
 
         var simplified = false
@@ -220,13 +222,6 @@ class EquationSolver {
             }.toTypedArray()
 
             val contain = variablesNullable.map { it.map { variable -> variable != null }.toBooleanArray() }.toTypedArray()
-
-            val res = openClServiceJava.calcWeightDbg(
-                    variables,
-                    contain,
-                    truthySets.map { it.toBooleanArray() }.toTypedArray(),
-                    falsySets.map { it.toBooleanArray() }.toTypedArray()
-            )
 
             val w = openClService.calcWeightJava(
                     variables, contain, truthySets = truthySets, falsySets = falsySets
