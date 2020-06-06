@@ -5,11 +5,6 @@ import javafx.fxml.FXMLLoader
 import javafx.scene.Parent
 import javafx.scene.Scene
 import javafx.stage.Stage
-import ru.rsreu.astrukov.bool.model.*
-import ru.rsreu.astrukov.bool.model.element.BoolElement
-import ru.rsreu.astrukov.bool.model.element.BoolElementBlock
-import ru.rsreu.astrukov.bool.service.EquationSolver
-import ru.rsreu.astrukov.bool.service.OpenClService
 
 
 class BoolApplication : Application() {

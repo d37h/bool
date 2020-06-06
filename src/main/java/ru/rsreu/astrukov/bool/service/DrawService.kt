@@ -6,10 +6,12 @@ import javafx.scene.shape.Line
 import javafx.scene.shape.Rectangle
 import javafx.scene.text.Font
 import javafx.scene.text.Text
+import javafx.scene.transform.Rotate
 import ru.rsreu.astrukov.bool.model.Coordinates
 import ru.rsreu.astrukov.bool.model.DrawParams
 import ru.rsreu.astrukov.bool.model.DrawVariables
 import ru.rsreu.astrukov.bool.model.element.*
+
 
 class DrawService() {
 
@@ -97,21 +99,21 @@ class DrawService() {
         styleText(text)
 
 
-        val r1 = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
-            y = coordinates.getPosY(offsetY)
-            height = this@DrawService.scaledSubBlockHeight + this@DrawService.drawParams.lineThickness
-            width = this@DrawService.scaledSubBlockWidth
-        }
+//        val r1 = styleRect(Rectangle()).apply {
+//            x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
+//            y = coordinates.getPosY(offsetY)
+//            height = this@DrawService.scaledSubBlockHeight + this@DrawService.drawParams.lineThickness
+//            width = this@DrawService.scaledSubBlockWidth
+//        }
+//
+//        val r2 = styleRect(Rectangle()).apply {
+//            x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
+//            y = coordinates.getPosY(offsetY + DrawVariables.elementSubBlockWidth)
+//            height = this@DrawService.scaledSubBlockHeight
+//            width = this@DrawService.scaledSubBlockWidth
+//        }
 
-        val r2 = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
-            y = coordinates.getPosY(offsetY + DrawVariables.elementSubBlockWidth)
-            height = this@DrawService.scaledSubBlockHeight
-            width = this@DrawService.scaledSubBlockWidth
-        }
-
-        node.children.addAll(mainRect, r1, r2, text)
+        node.children.addAll(mainRect, /* r1, r2, */ text)
     }
 
     private fun drawFunction(element: BoolElementFunction, coordinates: Coordinates, node: Pane, offsetY: Double) {
@@ -123,12 +125,18 @@ class DrawService() {
             width = this@DrawService.scaledSubBlockWidth
         }
 
-        val text = Text(
-                coordinates.getPosX() + DrawVariables.fontSize * drawParams.scale / 2,
-                coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth,
-                element.type.stringValue
-        )
-        styleText(text)
+        //todo: fix offset
+        val x = coordinates.getPosX() + DrawVariables.fontSize * drawParams.scale / 2
+        val y = coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth
+
+        val offsetedX = x + scaledSubBlockWidth/4
+        val offsetedY = y + scaledSubBlockHeight - this.drawParams.scale*2.0
+
+        val text = Text(offsetedX, offsetedY, element.type.toString())
+
+        text.transforms.add(Rotate(-90.0, offsetedX, offsetedY))
+        text.fill = Color.BLACK
+        text.font = Font("Verdana", this.drawParams.scale * DrawVariables.fontSize)
 
         node.children.addAll(mainRect, text)
     }

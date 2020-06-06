@@ -10,6 +10,7 @@ import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.element.*
 import ru.rsreu.astrukov.bool.model.element.ext.toMatrix2
 import java.util.*
+import kotlin.math.pow
 
 enum class SolveMode {
     STANDART, OPENCL
@@ -19,7 +20,6 @@ class EquationSolver {
 
     private val variableService = VariableService()
     private val openClService = OpenClService()
-    private val openClServiceJava = OpenClServiceJava()
 
     fun solve(function: BoolFunction, mode:SolveMode): BoolElement {
 
@@ -214,16 +214,16 @@ class EquationSolver {
 
         function.allVariables().forEachIndexed { variableIndex, _ ->
             val falsySets = toBinarySets(function.allVariables().size, variableIndex, false).map {
-                it.toTypedArray()
+                it.toBooleanArray()
             }.toTypedArray()
 
             val truthySets = toBinarySets(function.allVariables().size, variableIndex, true).map {
-                it.toTypedArray()
+                it.toBooleanArray()
             }.toTypedArray()
 
             val contain = variablesNullable.map { it.map { variable -> variable != null }.toBooleanArray() }.toTypedArray()
 
-            val w = openClService.calcWeightJava(
+            val w = openClService.calcWeight(
                     variables, contain, truthySets = truthySets, falsySets = falsySets
             )
 
@@ -240,62 +240,60 @@ class EquationSolver {
     }
 
 
-    private fun getVariableToExcludeCoroutine(function: BoolFunction): String {
-        val variables = function.allVariables().toList()
-
-
-        val weightList = ArrayList<Int>()
-
-        for (variableIndex in variables.indices) {
-
-            val falsySets = ArrayList(toBinarySets(variables.size, variableIndex, false))
-            val truthySets = ArrayList(toBinarySets(variables.size, variableIndex, true))
-
-            val deferredWeights = (0..falsySets.size).map {
-                GlobalScope.async {
-                    val expressionEvaluator = ExpressionEvaluator()
-                    val classParameters = Array(variables.size) { Boolean::class.javaPrimitiveType }
-
-                    expressionEvaluator.setParameters(variables.toTypedArray(), classParameters)
-                    expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
-                    expressionEvaluator.cook(function.toString())
-
-                    val truthySet = truthySets[it].toTypedArray()
-                    val falsySet = falsySets[it].toTypedArray()
-
-                    val truthyResult = expressionEvaluator.evaluate(truthySet) as Boolean
-                    val falsyResult = expressionEvaluator.evaluate(falsySet) as Boolean
-
-                    if (falsyResult xor truthyResult) 1 else 0
-                }
-            }
-
-            weightList.add(runBlocking {
-                deferredWeights.map { it.await() }.sum()
-            })
-
-        }
-
-        val maxWeight = Collections.max(weightList)
-        val variableToExcludeIndex = weightList.indexOf(maxWeight)
-
-        println(variableToExcludeIndex)
-
-        //fixme: actually returns 2x weight - duplicate iterations
-        return variables[variableToExcludeIndex]
-    }
+//    private fun getVariableToExcludeCoroutine(function: BoolFunction): String {
+//        val variables = function.allVariables().toList()
+//
+//
+//        val weightList = ArrayList<Int>()
+//
+//        for (variableIndex in variables.indices) {
+//
+//            val falsySets = ArrayList(toBinarySets(variables.size, variableIndex, false))
+//            val truthySets = ArrayList(toBinarySets(variables.size, variableIndex, true))
+//
+//            val deferredWeights = (0..falsySets.size).map {
+//                GlobalScope.async {
+//                    val expressionEvaluator = ExpressionEvaluator()
+//                    val classParameters = Array(variables.size) { Boolean::class.javaPrimitiveType }
+//
+//                    expressionEvaluator.setParameters(variables.toTypedArray(), classParameters)
+//                    expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
+//                    expressionEvaluator.cook(function.toString())
+//
+//                    val truthySet = truthySets[it].toTypedArray()
+//                    val falsySet = falsySets[it].toTypedArray()
+//
+//                    val truthyResult = expressionEvaluator.evaluate(truthySet) as Boolean
+//                    val falsyResult = expressionEvaluator.evaluate(falsySet) as Boolean
+//
+//                    if (falsyResult xor truthyResult) 1 else 0
+//                }
+//            }
+//
+//            weightList.add(runBlocking {
+//                deferredWeights.map { it.await() }.sum()
+//            })
+//
+//        }
+//
+//        val maxWeight = Collections.max(weightList)
+//        val variableToExcludeIndex = weightList.indexOf(maxWeight)
+//
+//        println(variableToExcludeIndex)
+//
+//        //fixme: actually returns 2x weight - duplicate iterations
+//        return variables[variableToExcludeIndex]
+//    }
 
     private fun toBinarySets(binaryLength: Int, fixedNumIndex: Int, fixedNumValue: Boolean): List<List<Boolean>> {
 
-        val binarySetsCount = Math.pow(2.0, binaryLength.toDouble()).toInt()
+        val binarySetsCount = 2.0.pow(binaryLength).toInt()
         val list = ArrayList<List<Boolean>>()
 
         for (number in 0 until binarySetsCount) {
-
             val numberSet: ArrayList<Boolean> = ArrayList()
 
             for (i in 0 until binaryLength) {
-
                 if (i == fixedNumIndex) {
                     numberSet.add(fixedNumValue)
                 } else {

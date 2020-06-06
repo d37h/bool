@@ -11,7 +11,7 @@ object DrawVariables {
     const val connectorDiameter = 4.0
     const val connectorOffset = 6.0
 
-    const val fontSize = 6
+    const val fontSize = 5
 }
 
 data class Coordinates(
