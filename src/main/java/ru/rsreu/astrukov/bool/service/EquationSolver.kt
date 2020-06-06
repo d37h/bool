@@ -1,14 +1,11 @@
 package ru.rsreu.astrukov.bool.service
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import org.codehaus.janino.ExpressionEvaluator
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.inverseVariable
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.replaceVariableWithBoolean
 import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.element.*
-import ru.rsreu.astrukov.bool.model.element.ext.toMatrix2
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrixx
 import java.util.*
 import kotlin.math.pow
 
@@ -207,36 +204,25 @@ class EquationSolver {
 
 
     private fun getVariableToExcludeCL(function: BoolFunction): String {
-        val variablesNullable = function.toMatrix2()
+        val variablesNullable = function.toMatrixx()
 
         val variables = variablesNullable.map { it.map { variable -> variable ?: false }.toBooleanArray() }.toTypedArray()
+        val contain = variablesNullable.map { it.map { variable -> variable != null }.toBooleanArray() }.toTypedArray()
+
         val weightList = ArrayList<Int>()
 
-        function.allVariables().forEachIndexed { variableIndex, _ ->
-            val falsySets = toBinarySets(function.allVariables().size, variableIndex, false).map {
-                it.toBooleanArray()
-            }.toTypedArray()
+        val w = openClService.calcWeight(
+                variables, contain
+        )
 
-            val truthySets = toBinarySets(function.allVariables().size, variableIndex, true).map {
-                it.toBooleanArray()
-            }.toTypedArray()
 
-            val contain = variablesNullable.map { it.map { variable -> variable != null }.toBooleanArray() }.toTypedArray()
+//        val maxWeight = Collections.max(weightList)
+//        val variableToExcludeIndex = weightList.indexOf(w)
 
-            val w = openClService.calcWeight(
-                    variables, contain, truthySets = truthySets, falsySets = falsySets
-            )
-
-            weightList.add(w)
-        }
-
-        val maxWeight = Collections.max(weightList)
-        val variableToExcludeIndex = weightList.indexOf(maxWeight)
-
-        println(variableToExcludeIndex)
+//        println(variableToExcludeIndex)
 
         //fixme: actually returns 2x weight - duplicate iterations
-        return function.allVariables().toTypedArray()[variableToExcludeIndex]
+        return function.allVariables().toTypedArray()[w]
     }
 
 

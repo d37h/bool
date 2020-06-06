@@ -9,12 +9,14 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import kotlin.ExperimentalStdlibApi;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 import static ru.rsreu.astrukov.bool.service.BoolFuncMockKt.getBf;
 
+@ExperimentalStdlibApi
 public class FXMLController implements Initializable {
     @FXML
     private BorderPane modelPane;

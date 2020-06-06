@@ -6,9 +6,8 @@ import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.DrawParams
-import ru.rsreu.astrukov.bool.model.element.ext.toMatrix2
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrixx
 import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
 import kotlin.time.measureTime
 
 @ExperimentalTime
@@ -26,16 +25,16 @@ fun getBf(pane: Pane) {
             )
     )
 
-    val matr = bf.toMatrix2()
+    val matr = bf.toMatrixx()
 
     val simplifiedBf = eqs.simplify(bf)
-    val stdDur = measureTime{
-        val root = eqs.solve(simplifiedBf, SolveMode.STANDART)
-    }
-
-    val openClDur = measureTime{
-        val root = eqs.solve(simplifiedBf, SolveMode.OPENCL)
-    }
+//    val stdDur = measureTime{
+//        val root = eqs.solve(simplifiedBf, SolveMode.STANDART)
+//    }
+//
+//    val openClDur = measureTime{
+//        val root = eqs.solve(simplifiedBf, SolveMode.OPENCL)
+//    }
 
     val root = eqs.solve(simplifiedBf, SolveMode.OPENCL)
 

@@ -4,7 +4,7 @@ import ru.rsreu.astrukov.bool.helper.VariablesHelper
 import ru.rsreu.astrukov.bool.model.BoolFunction
 
 
-fun BoolFunction.toMatrix2() = this.varGroups.map {
+fun BoolFunction.toMatrixx() = this.varGroups.map {
     val allvars = this.allVariables().toTypedArray()
     val map = it.toMap()
     allvars.map {variable -> map[variable]}.toTypedArray()
