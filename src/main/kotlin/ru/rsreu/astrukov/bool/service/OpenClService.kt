@@ -3,7 +3,6 @@ package ru.rsreu.astrukov.bool.service
 import com.aparapi.Kernel
 import com.aparapi.Range
 import com.aparapi.internal.kernel.KernelManager
-import java.lang.RuntimeException
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log2
@@ -12,39 +11,34 @@ import kotlin.math.pow
 
 class OpenClService {
 
-
-    init {
-        val l1 = 31.getBinaryLength()
-        val l2 = 32.getBinaryLength()
-        val l3 = 33.getBinaryLength()
-
-        val t1 = generate(31, 5)
-        val t2 = generate(32, 6)
-        val t3 = generate(33, 6)
-        val t34 = generate(33, 6)
-    }
-
     fun calcWeight(
             boolVars: Array<BooleanArray>,
             containMask: Array<BooleanArray>
     ): Int {
+        if (boolVars.size == 1 && containMask[0].all { it }) {
+            return 0
+        }
+
+
         val res = calcWeightOnGpu(
                 boolVars,
                 containMask
         )
 
-        val resChunked = res.toList().chunked(res.size / (boolVars[0].size)/2)
+        val resChunked = res.toList().chunked(res.size / (boolVars[0].size) / 2)
 
 
         val tt = resChunked.filterIndexed { index, _ -> index % 2 == 0 }
-                .map { list-> list.map{it.contains(true)} }
+                .map { list -> list.map { it.contains(true) } }
 
         val ff = resChunked.filterIndexed { index, _ -> index % 2 == 1 }
-                .map { list-> list.map{it.contains(true)} }
+                .map { list -> list.map { it.contains(true) } }
 
-        val resultList = tt.mapIndexed { index, list -> list.zip(ff[index]).count {
-            it.first xor it.second
-        }}
+        val resultList = tt.mapIndexed { index, list ->
+            list.zip(ff[index]).count {
+                it.first xor it.second
+            }
+        }
 
         //fixme: remove rev???
         return resultList.indexOf(resultList.max())
@@ -64,6 +58,7 @@ class OpenClService {
             boolVars: Array<BooleanArray>,
             containVars: Array<BooleanArray>
     ): Array<BooleanArray> {
+
         val groupsCount = boolVars.size
         val setLength = boolVars[0].size// (boolVars[0].size+1).getBinaryLength()
         val singleVariableSetRange = 2.0.pow(setLength).toInt()
@@ -84,39 +79,39 @@ class OpenClService {
 //            this.setLength = setLength
 //        }
 
-        val kernel = object {
-            fun run(globalId: Int) {
-                if (globalId == 64) {
-                    val a =1
-                }
+        val kernel = object : Kernel() {
+            override fun run() {
+//                if (globalId == 64) {
+//                    val a =1
+//                }
                 val setIndex = globalId / groupsCount
                 val groupIndex = globalId % groupsCount
 
-                val variableIndex = globalId / (singleVariableSetRange* groupsCount)
-                val setGroupNumber = globalId % singleVariableSetRange
-                val setGenerationIndex = setIndex % (singleVariableSetRange/2)
+                val variableIndex = globalId / (singleVariableSetRange * groupsCount)
+//                val setGroupNumber = globalId % singleVariableSetRange
+                val setGenerationIndex = setIndex % (singleVariableSetRange / 2)
 
                 //fixme:
-                val groupR = boolVars[groupIndex]
-                val set = generate(setGenerationIndex, setLength)
-                val sameLockedVariableSetsCount = (singleVariableSetRange*groupsCount/2)
-                set[variableIndex] = (globalId / sameLockedVariableSetsCount) % 2 == 0
+//                val groupR = boolVars[groupIndex]
+                generate(setGenerationIndex, setLength, setIndex)
+                val sameLockedVariableSetsCount = (singleVariableSetRange * groupsCount / 2)
+                sets[setIndex][variableIndex] = (globalId / sameLockedVariableSetsCount) % 2 == 0
 
-                solveCl(setIndex, groupIndex, set)
-                val calcResult = groupR.mapIndexed {index: Int, b: Boolean -> !containVars[groupIndex][index] || (containVars[groupIndex][index] && (b == set[index]))  }
-                        .all { it }
-                if (result[setIndex][groupIndex] != calcResult) {
-                    val a = 1
-                }
-                val a = "Group($groupIndex):"+ groupR.map { if(it) "1" else "0" }+
-                        " Set($setIndex):"+ set.map { if(it) "1" else "0" }+
-                        " Var: $variableIndex Result: ${result[setIndex][groupIndex]}"
-                val b= ""
+                solveCl(setIndex, groupIndex)
+//                val calcResult = groupR.mapIndexed {index: Int, b: Boolean -> !containVars[groupIndex][index] || (containVars[groupIndex][index] && (b == set[index]))  }
+//                        .all { it }
+//                if (result[setIndex][groupIndex] != calcResult) {
+//                    val a = 1
+//                }
+//                val a = "Group($groupIndex):"+ groupR.map { if(it) "1" else "0" }+
+//                        " Set($setIndex):"+ set.map { if(it) "1" else "0" }+
+//                        " Var: $variableIndex Result: ${result[setIndex][groupIndex]}"
+//                val b= ""
             }
 
-            fun solveCl(setIndex: Int, groupIndex: Int, set : BooleanArray) {
+            fun solveCl(setIndex: Int, groupIndex: Int) {
                 val group = boolVars[groupIndex]
-//                val set = group
+                val set = sets[setIndex]
                 val containGroup = containVars[groupIndex]
                 var gotFalsy = false
                 var varIndex = 0
@@ -130,47 +125,53 @@ class OpenClService {
                 result[setIndex][groupIndex] = !gotFalsy
             }
 
-            fun generate(range: Int, size: Int) : BooleanArray{
+            fun generate(range: Int, size: Int, setIndex: Int) {
                 var number = range
 
-                val array = BooleanArray(size)
-                var varIndex =  0
+                var varIndex = 0
 
                 while (varIndex < size) {
-                    array[varIndex] = number % 2 != 0
-                    number /= 2
+                    sets[setIndex][varIndex] = number % 2 != 0
+                    number = number / 2
                     varIndex++
                 }
 
-                return array
             }
 
         }
 
         val gpuDevice = KernelManager.instance().bestDevice()
         val range = Range.create(gpuDevice, resultSize)
-//        kernel.execute(range)
-        for (i in 0 until resultSize) {
-            try {
-                kernel.run(i)
-            } catch (e: RuntimeException) {
-                val a = 1
-            }
+        print(resultSize)
+        if (resultSize == 256) {
+            val a =1
         }
+        try {
+            kernel.execute(range)
+        } catch (e: RuntimeException) {
+            val a = e
+        }
+//        for (i in 0 until resultSize) {
+//            try {
+//                kernel.run(i)
+//            } catch (e: RuntimeException) {
+//                val a = 1
+//            }
+//        }
         //wk.execute(range)
         //        val et = kernel.executionTime
-        val sb = StringBuilder()
-        KernelManager.instance().reportDeviceUsage(sb, true)
-        val report = sb.toString()
-        print(report)
+//        val sb = StringBuilder()
+//        KernelManager.instance().reportDeviceUsage(sb, true)
+//        val report = sb.toString()
+//        print(report)
         return result
     }
 
-    fun generate(range: Int, size: Int) : BooleanArray{
+    fun generate(range: Int, size: Int): BooleanArray {
         var number = range
 
         val array = BooleanArray(size)
-        var varIndex =  0
+        var varIndex = 0
 
         while (varIndex < size) {
             array[varIndex] = number % 2 != 0
@@ -182,7 +183,7 @@ class OpenClService {
     }
 
     fun Int.getBinaryLength(): Int {
-        var setSize = log2((this/2.0))+1
+        var setSize = log2((this / 2.0)) + 1
         if (ceil(setSize) == floor(setSize)) {
             setSize += 1
         }

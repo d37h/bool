@@ -1,37 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.StackPane?>
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<StackPane maxHeight="292.0" maxWidth="-Infinity" minHeight="150.0" minWidth="-Infinity" prefHeight="292.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.rsreu.astrukov.bool.FXMLController">
+<StackPane maxHeight="578.0" maxWidth="-Infinity" minHeight="150.0" minWidth="-Infinity" prefHeight="578.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.rsreu.astrukov.bool.FXMLController">
     <children>
-        <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+        <TabPane prefHeight="513.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE">
             <tabs>
-                <Tab text="Функция">
+                <Tab text="Функция и схема">
                     <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0">
-                            <children>
-                                <ScrollPane fitToHeight="true" fitToWidth="true" layoutX="7.0" layoutY="6.0" prefHeight="245.0" prefWidth="785.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="7.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="6.0">
-                                    <content>
-                                        <BorderPane fx:id="graphicsPane" minHeight="720.0" minWidth="1280.0" />
-                                    </content>
-                                </ScrollPane>
-                            </children>
-                        </AnchorPane>
-                    </content>
-                </Tab>
-                <Tab text="Модель">
-                    <content>
-                        <BorderPane fx:id="modelPane" prefHeight="200.0" prefWidth="200.0" />
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <SplitPane dividerPositions="0.3" prefHeight="551.0" prefWidth="800.0">
+                          <items>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                 <children>
+                                    <VBox prefHeight="446.0" prefWidth="237.0">
+                                       <children>
+                                          <TableView fx:id="singleSetsTable" prefHeight="201.0" prefWidth="237.0">
+                                            <columns>
+                                              <TableColumn fx:id="singleSetsTableColumn" prefWidth="237.0" text="Единичные наборы" />
+                                            </columns>
+                                          </TableView>
+                                          <TableView fx:id="masksTable" prefHeight="201.0" prefWidth="237.0">
+                                            <columns>
+                                              <TableColumn fx:id="masksTableColumn" prefWidth="237.0" text="Маски" />
+                                            </columns>
+                                          </TableView>
+                                          <TableView fx:id="variablesTable" prefHeight="158.0" prefWidth="237.0">
+                                            <columns>
+                                              <TableColumn fx:id="variablesTableColumn" prefWidth="237.0" text="Переменные" />
+                                            </columns>
+                                          </TableView>
+                                       </children>
+                                    </VBox>
+                                    <Button layoutX="14.0" layoutY="510.0" mnemonicParsing="false" prefWidth="100.0" text="Рассчитать" />
+                                    <Label layoutX="28.0" layoutY="481.0" text="Режим работы" />
+                                    <Button layoutX="122.0" layoutY="510.0" mnemonicParsing="false" prefWidth="100.0" text="Загрузить" />
+                                    <ChoiceBox layoutX="122.0" layoutY="477.0" prefHeight="25.0" prefWidth="100.0" value="GPU + CPU">
+                                       <items>
+                                          <FXCollections fx:factory="observableArrayList">
+                                             <String fx:value="GPU + CPU" />
+                                             <String fx:value="GPU" />
+                                             <String fx:value="CPU" />
+                                          </FXCollections>
+                                       </items>
+                                    </ChoiceBox>
+                                    <CheckBox layoutX="29.0" layoutY="453.0" mnemonicParsing="false" text="Показать реализацию блоков" />
+                                 </children>
+                              </AnchorPane>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="522.0" prefWidth="556.0">
+                                 <children>
+                                    <SplitPane dividerPositions="0.9" orientation="VERTICAL" prefHeight="545.0" prefWidth="552.0">
+                                      <items>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                             <children>
+                                                        <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="480.0" prefWidth="542.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="7.0" AnchorPane.rightAnchor="1.0" AnchorPane.topAnchor="6.0">
+                                                            <content>
+                                                                <BorderPane fx:id="graphicsPane" minHeight="720.0" minWidth="1280.0" />
+                                                            </content>
+                                                        </ScrollPane>
+                                             </children>
+                                          </AnchorPane>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                             <children>
+                                                <Slider layoutX="396.0" layoutY="19.0" />
+                                                <TextField layoutX="356.0" layoutY="14.0" prefHeight="25.0" prefWidth="34.0" text="1.0" />
+                                                <Label layoutX="297.0" layoutY="17.0" text="Масштаб" />
+                                                <Button layoutX="14.0" layoutY="13.0" mnemonicParsing="false" text="Сохранить" />
+                                                <Button layoutX="95.0" layoutY="13.0" mnemonicParsing="false" text="Обновить" />
+                                                <Button layoutX="177.0" layoutY="13.0" mnemonicParsing="false" text="Параметры...." />
+                                             </children>
+                                          </AnchorPane>
+                                      </items>
+                                    </SplitPane>
+                                 </children></AnchorPane>
+                          </items>
+                        </SplitPane>
+                     </children></AnchorPane>
                     </content>
                 </Tab>
                 <Tab text="Таблица истинности">
                     <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                        <BorderPane fx:id="modelPane" prefHeight="200.0" prefWidth="200.0" />
                     </content>
                 </Tab>
             </tabs>

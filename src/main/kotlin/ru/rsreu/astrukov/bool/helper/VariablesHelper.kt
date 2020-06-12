@@ -16,7 +16,9 @@ object VariablesHelper {
     }
 
     fun replaceVariableWithBoolean(boolFunction: BoolFunction, variable: String, value: Boolean): BoolFunction {
-
+        if ("(!x4 && x10) || (x6 && !x5 && !x4)" == boolFunction.toString()) {
+            val a = 1
+        }
         //убираем те группы, где переменная выродилась в 0 из-за нуля в конъюнкции
         val excludedFalsyGroups = boolFunction.varGroups.minus(
                 boolFunction.varGroups.filter {

@@ -5,7 +5,7 @@ import ru.rsreu.astrukov.bool.helper.VariablesHelper.inverseVariable
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.replaceVariableWithBoolean
 import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.element.*
-import ru.rsreu.astrukov.bool.model.element.ext.toMatrixx
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrix
 import java.util.*
 import kotlin.math.pow
 
@@ -18,7 +18,7 @@ class EquationSolver {
     private val variableService = VariableService()
     private val openClService = OpenClService()
 
-    fun solve(function: BoolFunction, mode:SolveMode): BoolElement {
+    fun solve(function: BoolFunction, mode: SolveMode): BoolElement {
 
         val variables = function.allVariables().toList()
 
@@ -41,7 +41,7 @@ class EquationSolver {
                 }
 
                 val secondChild = if (falsyFunction.varGroups.isEmpty()) {
-                    simplifyTwoArgsFunction(function, excludedVariable, true)
+                    simplifyTwoArgsFunction(function, excludedVariable, false)
                 } else {
                     solve(falsyFunction, mode)
                 }
@@ -65,7 +65,6 @@ class EquationSolver {
         var expression = function.toString()
 
         val expressionEvaluator = ExpressionEvaluator()
-        val classParameters = arrayOf(Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
 
         if (excludedVariable != null && value != null) {
             expression = expression.replace("!$excludedVariable", (!value).toString())
@@ -73,10 +72,22 @@ class EquationSolver {
         }
 
         val variableParameters = excludedVariable?.let { function.allVariables().minus(it) } ?: function.allVariables()
+        val classParameters = variableParameters.map { Boolean::class.javaPrimitiveType!! }.toTypedArray()
 
         expressionEvaluator.setParameters(variableParameters.toTypedArray(), classParameters)
         expressionEvaluator.setExpressionType(Boolean::class.javaPrimitiveType)
         expressionEvaluator.cook(expression)
+
+
+        if (variableParameters.toTypedArray().size != 2) {
+            val result = expressionEvaluator.evaluate(variableParameters.map { false }.toTypedArray()) as Boolean
+            val resultString = if (result) "1111" else "0000"
+
+            val type = BoolElementType.values().find { it.stringValue == resultString.reversed() }
+                    ?: throw RuntimeException("no BoolElementTypeValue for ${resultString.reversed()}")
+
+            return getElementByType(type, variableParameters.toList())
+        }
 
         var resultString = ""
 
@@ -204,9 +215,13 @@ class EquationSolver {
 
 
     private fun getVariableToExcludeCL(function: BoolFunction): String {
-        val variablesNullable = function.toMatrixx()
+        val variablesNullable = function.toMatrix()
 
-        val variables = variablesNullable.map { it.map { variable -> variable ?: false }.toBooleanArray() }.toTypedArray()
+        val variables = variablesNullable.map {
+            it.map { variable ->
+                variable ?: false
+            }.toBooleanArray()
+        }.toTypedArray()
         val contain = variablesNullable.map { it.map { variable -> variable != null }.toBooleanArray() }.toTypedArray()
 
         val weightList = ArrayList<Int>()

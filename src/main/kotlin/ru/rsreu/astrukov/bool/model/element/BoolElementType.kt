@@ -10,7 +10,7 @@ enum class BoolElementType(val stringValue: String) {
     FIRST_LESS("0100"), //инверсия обратной импл
     NOT_FIRST("0101"),
     XOR("0110"),
-    NOT_AND("0111"),
+    NAND("0111"),
 
     AND("1000"),
     EQUAL("1001"),

@@ -4,18 +4,19 @@ import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Line
 import javafx.scene.shape.Rectangle
+import javafx.scene.shape.StrokeType
 import javafx.scene.text.Font
 import javafx.scene.text.Text
-import javafx.scene.transform.Rotate
 import ru.rsreu.astrukov.bool.model.Coordinates
 import ru.rsreu.astrukov.bool.model.DrawParams
 import ru.rsreu.astrukov.bool.model.DrawVariables
 import ru.rsreu.astrukov.bool.model.element.*
 
 
-class DrawService() {
+class DrawService(
+        var drawParams: DrawParams
+) {
 
-    var drawParams = DrawParams(scale = 2.0)
 
     fun draw(element: BoolElement, node: Pane, offsetY: Double = 0.0) {
         //todo:  add line for top elem
@@ -84,36 +85,46 @@ class DrawService() {
     private fun drawBIP(element: BoolElementBlock, coordinates: Coordinates, node: Pane, offsetY: Double) {
         //todo: add AND and vars via text
         val mainRect = styleRect(Rectangle()).apply {
-            x = coordinates.getPosX()
-            y = coordinates.getPosY(offsetY)
-            height = this@DrawService.scaledSubBlockHeight * 2
-            width = this@DrawService.scaledSubBlockWidth + this@DrawService.drawParams.lineThickness
+            this.x = coordinates.getPosX()
+            this.y = coordinates.getPosY(offsetY)
+            this.height = this@DrawService.scaledSubBlockHeight * 2
+            this.width = this@DrawService.scaledSubBlockWidth + this@DrawService.drawParams.lineThickness
         }
+
+
 
         //todo:  add line for excl var
         val text = Text(
-                coordinates.getPosX() + DrawVariables.fontSize * drawParams.scale / 2,
-                coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth,
+                coordinates.getPosX() + 2* this@DrawService.scaledSubBlockWidth + 8,
+                //fixme
+                coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth + scaledSubBlockHeight - 8,
                 element.excludedVariable
         )
         styleText(text)
 
 
-//        val r1 = styleRect(Rectangle()).apply {
-//            x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
-//            y = coordinates.getPosY(offsetY)
-//            height = this@DrawService.scaledSubBlockHeight + this@DrawService.drawParams.lineThickness
-//            width = this@DrawService.scaledSubBlockWidth
-//        }
-//
-//        val r2 = styleRect(Rectangle()).apply {
-//            x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
-//            y = coordinates.getPosY(offsetY + DrawVariables.elementSubBlockWidth)
-//            height = this@DrawService.scaledSubBlockHeight
-//            width = this@DrawService.scaledSubBlockWidth
-//        }
+        val r1 = styleRect(Rectangle()).apply {
+            this.x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
+            this.y = coordinates.getPosY(offsetY)
+            height = this@DrawService.scaledSubBlockHeight + this@DrawService.drawParams.lineThickness
+            width = this@DrawService.scaledSubBlockWidth
+        }
 
-        node.children.addAll(mainRect, /* r1, r2, */ text)
+        val r2 = styleRect(Rectangle()).apply {
+            this.x = coordinates.getPosX() + this@DrawService.scaledSubBlockWidth
+            this.y = coordinates.getPosY(offsetY + DrawVariables.elementSubBlockHeight)
+            height = this@DrawService.scaledSubBlockHeight
+            width = this@DrawService.scaledSubBlockWidth
+        }
+
+
+        val x = coordinates.getPosX() + 4
+        val y = coordinates.getPosY(offsetY) + 32
+
+        val textBip = Text(x, y, "EXCL")
+        styleText(textBip)
+
+        node.children.addAll(mainRect,  r1, r2, /*textBip*,*/ text)
     }
 
     private fun drawFunction(element: BoolElementFunction, coordinates: Coordinates, node: Pane, offsetY: Double) {
@@ -126,26 +137,24 @@ class DrawService() {
         }
 
         //todo: fix offset
-        val x = coordinates.getPosX() + DrawVariables.fontSize * drawParams.scale / 2
-        val y = coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth
+        val x = coordinates.getPosX() + 4
+        val y = coordinates.getPosY(offsetY) + 32
 
-        val offsetedX = x + scaledSubBlockWidth/4
-        val offsetedY = y + scaledSubBlockHeight - this.drawParams.scale*2.0
+        val text = Text(x, y, element.type.toString())
+        styleText(text)
 
-        val text = Text(offsetedX, offsetedY, element.type.toString())
+//        text.transforms.add(Rotate(-90.0, offsetedX, offsetedY))
+//        text.fill = Color.BLACK
+//        text.font = Font("Verdana", this.drawParams.scale * DrawVariables.fontSize)
 
-        text.transforms.add(Rotate(-90.0, offsetedX, offsetedY))
-        text.fill = Color.BLACK
-        text.font = Font("Verdana", this.drawParams.scale * DrawVariables.fontSize)
-
-        node.children.addAll(mainRect, text)
+        node.children.addAll(mainRect /*,text*/)
     }
 
     private fun drawVariable(element: BoolElementVariable, coordinates: Coordinates, node: Pane, offsetY: Double) {
 
         val text = Text(
-                coordinates.getPosX() + DrawVariables.fontSize * drawParams.scale / 2,
-                coordinates.getPosY(offsetY) + this@DrawService.scaledSubBlockWidth,
+                coordinates.getPosX() + 4,
+                coordinates.getPosY(offsetY) +28,
                 element.variable
         )
         styleText(text)
@@ -214,6 +223,15 @@ class DrawService() {
     private fun Coordinates.getTopConnectorPosXStart() = (
             this.depth + DrawVariables.elementSubBlockWidth
             ) * this@DrawService.drawParams.scale
+
+    private fun styleRect(rectangle: Rectangle): Rectangle {
+        return rectangle.apply {
+            this.fill = Color.WHEAT
+            this.stroke = Color.BLACK
+            this.strokeType = StrokeType.INSIDE
+        }
+    }
+
 
     val scaledSubBlockHeight = this.drawParams.scale * DrawVariables.elementSubBlockHeight
     val scaledSubBlockWidth = this.drawParams.scale * DrawVariables.elementSubBlockWidth
