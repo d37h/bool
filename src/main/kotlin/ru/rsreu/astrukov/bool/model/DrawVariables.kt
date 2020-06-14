@@ -6,7 +6,7 @@ object DrawVariables {
     const val elementSubBlockHeight = 24.0
 
     const val spacingHeight = 24.0
-    const val spacingWidth = 16.0
+    const val spacingWidth = 24.0
 
     const val connectorDiameter = 4.0
     const val connectorOffset = elementSubBlockHeight/2

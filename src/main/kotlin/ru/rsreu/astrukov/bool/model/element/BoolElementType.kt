@@ -20,5 +20,7 @@ enum class BoolElementType(val stringValue: String) {
     SECOND("1100"),
     FIRST_NOT_BIGGER("1101"), //прямая импл
     OR("1110"),
-    TRUE("1111"),
+    TRUE("1111");
+
+    fun isTerminal() = this == TRUE || this == FALSE || this == FIRST || this == SECOND || this == NOT_FIRST || this == NOT_SECOND
 }

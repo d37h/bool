@@ -5,7 +5,8 @@ import ru.rsreu.astrukov.bool.model.DrawParams
 
 data class BoolElementVariable(
         val variable: String,
-        override var coordinates: Coordinates? = null
+        override var coordinates: Coordinates? = null,
+        override var parent: BoolElement? = null
 ) : BoolElement {
 
     companion object {

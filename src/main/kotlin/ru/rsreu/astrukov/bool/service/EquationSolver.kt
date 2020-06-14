@@ -5,7 +5,7 @@ import ru.rsreu.astrukov.bool.helper.VariablesHelper.inverseVariable
 import ru.rsreu.astrukov.bool.helper.VariablesHelper.replaceVariableWithBoolean
 import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.element.*
-import ru.rsreu.astrukov.bool.model.element.ext.toMatrix
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrix2
 import java.util.*
 import kotlin.math.pow
 
@@ -18,7 +18,7 @@ class EquationSolver {
     private val variableService = VariableService()
     private val openClService = OpenClService()
 
-    fun solve(function: BoolFunction, mode: SolveMode): BoolElement {
+    fun solve(function: BoolFunction, mode: SolveMode, parent: BoolElement?): BoolElement {
 
         val variables = function.allVariables().toList()
 
@@ -34,28 +34,40 @@ class EquationSolver {
                 val truthyFunction = replaceVariableWithBoolean(function, excludedVariable, true)
                 val falsyFunction = replaceVariableWithBoolean(function, excludedVariable, false)
 
+                val block = BoolElementBlock(
+                        parent = parent,
+                        variables = vars,
+                        excludedVariable = excludedVariable,
+                        function = function,
+                        firstChild = null,
+                        secondChild= null
+                )
+
                 val firstChild = if (truthyFunction.varGroups.isEmpty()) {
-                    simplifyTwoArgsFunction(function, excludedVariable, true)
+                    simplifyTwoArgsFunction(function, excludedVariable, true).apply {
+                        this.parent = parent
+                    }
                 } else {
-                    solve(truthyFunction, mode)
+                    solve(truthyFunction, mode, block)
                 }
 
                 val secondChild = if (falsyFunction.varGroups.isEmpty()) {
-                    simplifyTwoArgsFunction(function, excludedVariable, false)
+                    simplifyTwoArgsFunction(function, excludedVariable, false).apply {
+                        this.parent = parent
+                    }
                 } else {
-                    solve(falsyFunction, mode)
+                    solve(falsyFunction, mode, block)
                 }
 
-                BoolElementBlock(
-                        firstChild = firstChild,
-                        secondChild = secondChild,
-                        variables = vars,
-                        excludedVariable = excludedVariable,
-                        function = function
-                )
+                block.apply {
+                    this.firstChild = firstChild
+                    this.secondChild = secondChild
+                }
             }
-            variables.size == 2 -> simplifyTwoArgsFunction(function)
-            else -> BoolElementVariable(variable = variables[0])
+            variables.size == 2 -> simplifyTwoArgsFunction(function).apply {
+                this.parent = parent
+            }
+            else -> BoolElementVariable(variable = variables[0], parent = parent)
         }
 
     }
@@ -215,7 +227,7 @@ class EquationSolver {
 
 
     private fun getVariableToExcludeCL(function: BoolFunction): String {
-        val variablesNullable = function.toMatrix()
+        val variablesNullable = function.toMatrix2()
 
         val variables = variablesNullable.map {
             it.map { variable ->

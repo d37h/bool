@@ -10,6 +10,7 @@ data class BoolElementBlock(
         val function: BoolFunction,
 
         override var coordinates: Coordinates? = null,
-        override val firstChild: BoolElement?,
-        override val secondChild: BoolElement?
+        override var firstChild: BoolElement?,
+        override var secondChild: BoolElement?,
+        override var parent: BoolElement?
 ) : BoolElementWithChildren

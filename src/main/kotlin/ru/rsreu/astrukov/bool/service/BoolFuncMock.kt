@@ -6,7 +6,7 @@ import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import ru.rsreu.astrukov.bool.model.BoolFunction
 import ru.rsreu.astrukov.bool.model.DrawParams
-import ru.rsreu.astrukov.bool.model.element.ext.toMatrix
+import ru.rsreu.astrukov.bool.model.element.ext.toMatrix2
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -57,7 +57,7 @@ fun getBf(pane: Pane) {
             )
     )
 
-    val matr = bf.toMatrix()
+    val matr = bf.toMatrix2()
 
     val simplifiedBf = eqs.simplify(bf)
 //
@@ -67,7 +67,7 @@ fun getBf(pane: Pane) {
 
 
     val openClDur = measureTime {
-        val root1 = EquationSolver().solve(simplifiedBf, SolveMode.OPENCL)
+        val root1 = EquationSolver().solve(simplifiedBf, SolveMode.OPENCL, null)
     }
     println("openClDur: "+   openClDur.inMilliseconds)
 //
@@ -75,7 +75,7 @@ fun getBf(pane: Pane) {
 //     eqs.solve(bigBf, SolveMode.OPENCL)
 //    }
 //    val root1 = eqs.solve(bigBf, SolveMode.OPENCL)
-    val root = eqs.solve(simplifiedBf, SolveMode.OPENCL)
+    val root = eqs.solve(simplifiedBf, SolveMode.OPENCL, null)
 
     drawService.setCoordinates(root, 1)
     val paneHeight = drawParams.scale * root.coordinates?.elementHeight!!
